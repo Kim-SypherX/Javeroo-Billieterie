@@ -28,13 +28,29 @@ export const EVENT_CATEGORY_MAP: Record<EventCategoryId, EventCategory> = Object
   EVENT_CATEGORIES.map((c) => [c.id, c]),
 ) as Record<EventCategoryId, EventCategory>;
 
+export function resolveBaseUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (explicit) {
+    return explicit.replace(/\/+$/, "");
+  }
+  const vercelProd = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercelProd) {
+    return `https://${vercelProd.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+  }
+  const vercelPreview = process.env.VERCEL_URL?.trim();
+  if (vercelPreview) {
+    return `https://${vercelPreview.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+  }
+  return "http://localhost:3000";
+}
+
 export const SITE_CONFIG = {
   brandName: "Javeroo",
   fullName: "Javeroo-Billeterie",
   tagline: "Billetterie en ligne & Mobile Money en Afrique de l'Ouest",
   description:
     "Achetez vos billets de concerts, festivals et conférences en zone UEMOA en moins d'une minute par Mobile Money, sans application obligatoire et sans publicité.",
-  baseUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  baseUrl: resolveBaseUrl(),
   contact: {
     supportEmail: "support@javeroo.com",
     privacyEmail: "privacy@javeroo.com",

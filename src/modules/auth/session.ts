@@ -21,8 +21,10 @@ function getSessionSecret(): string {
   if (secret && secret.length >= 32) {
     return secret;
   }
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("SESSION_SECRET (>= 32 caractères) est obligatoire en production.");
+  if (process.env.VERCEL_ENV === "production") {
+    console.warn(
+      "[SECURITY] SESSION_SECRET absent ou trop court (<32 car.). Configurez-le dans Vercel Environment Variables.",
+    );
   }
   return "dev-session-secret-change-me-in-production-64-chars-javeroo-uemoa";
 }

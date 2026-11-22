@@ -4,8 +4,9 @@ import { pgReleaseExpiredOrderHolds } from "@/modules/events/pg-transactions";
 /**
  * Endpoint Cron sécurisé (CRON_SECRET) destiné à libérer automatiquement les réservations
  * de places impayées au-delà de 10 minutes (évite tout blocage de stock).
+ * Supporte GET (Vercel Cron Jobs) et POST (déclenchement manuel / webhook).
  */
-export async function POST(request: Request) {
+async function handleExpireHolds(request: Request) {
   const configuredSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get("authorization");
 
@@ -29,3 +30,10 @@ export async function POST(request: Request) {
   }
 }
 
+export async function GET(request: Request) {
+  return handleExpireHolds(request);
+}
+
+export async function POST(request: Request) {
+  return handleExpireHolds(request);
+}

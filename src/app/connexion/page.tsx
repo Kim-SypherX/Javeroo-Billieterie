@@ -128,8 +128,9 @@ function ConnexionForm() {
           </Link>
         </p>
 
-        {/* Accès rapides de démonstration locale */}
-        {process.env.NODE_ENV !== "production" && (
+        {/* Accès rapides de démonstration (local, Preview ou NEXT_PUBLIC_ENABLE_DEMO_ACCOUNTS=true) */}
+        {(process.env.NODE_ENV !== "production" ||
+          process.env.NEXT_PUBLIC_ENABLE_DEMO_ACCOUNTS === "true") && (
           <div className="mt-6 rounded-2xl border border-teal-200 bg-teal-50 p-4 text-xs text-teal-950">
             <p className="flex items-center gap-1.5 font-bold">
               <ShieldCheck className="h-4 w-4 text-teal-700" aria-hidden="true" />

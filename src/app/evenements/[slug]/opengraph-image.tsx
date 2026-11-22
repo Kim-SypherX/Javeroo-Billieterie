@@ -4,6 +4,7 @@ import { formatEventDate, formatXof, getCountryByCode } from "@/config/uemoa";
 import { getEventBySlug } from "@/modules/events/store";
 import { getEventMinPriceXof } from "@/modules/events/types";
 
+export const runtime = "nodejs";
 export const alt = "Billet événement Javeroo-Billeterie";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

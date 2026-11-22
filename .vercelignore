@@ -1,0 +1,10 @@
+docs/
+tests/
+docker-compose.yml
+.env
+.env.local
+.env.*.local
+public/uploads/
+*.pdf
+*.log
+

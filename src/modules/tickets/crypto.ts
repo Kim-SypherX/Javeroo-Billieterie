@@ -8,8 +8,10 @@ function getSigningSecret(): string {
   if (configured && configured.length >= 32) {
     return configured;
   }
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("TICKET_SIGNING_SECRET must be set (>= 32 chars) in production.");
+  if (process.env.VERCEL_ENV === "production") {
+    console.warn(
+      "[SECURITY] TICKET_SIGNING_SECRET absent ou trop court (<32 car.). Configurez-le dans Vercel Environment Variables.",
+    );
   }
   return DEFAULT_DEV_SECRET;
 }

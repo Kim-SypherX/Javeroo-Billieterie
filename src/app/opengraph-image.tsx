@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { PRICING_CONFIG } from "@/config/pricing";
 
+export const runtime = "nodejs";
 export const alt = "Javeroo-Billeterie — Billetterie en ligne & Mobile Money en zone UEMOA";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

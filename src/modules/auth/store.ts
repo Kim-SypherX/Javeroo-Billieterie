@@ -19,13 +19,19 @@ declare global {
   var __javerooAuthUsers: AuthUserRecord[] | undefined;
 }
 
+function areDemoAccountsEnabled(): boolean {
+  if (process.env.ENABLE_DEMO_ACCOUNTS === "true") return true;
+  if (process.env.ENABLE_DEMO_ACCOUNTS === "false") return false;
+  if (process.env.VERCEL_ENV === "preview") return true;
+  return process.env.NODE_ENV !== "production";
+}
+
 function getUsersStore(): AuthUserRecord[] {
   if (!globalThis.__javerooAuthUsers) {
-    // Comptes de démonstration pré-chargés en développement (jamais exposés en production)
-    globalThis.__javerooAuthUsers =
-      process.env.NODE_ENV === "production"
-        ? []
-        : [
+    // Comptes de démonstration actifs en local, Vercel Preview ou si ENABLE_DEMO_ACCOUNTS=true
+    globalThis.__javerooAuthUsers = !areDemoAccountsEnabled()
+      ? []
+      : [
             {
               id: "usr-org-faso",
               email: "organisateur@javeroo.com",
