@@ -1,0 +1,34 @@
+import { NextResponse } from "next/server";
+import { getCurrentSession } from "@/modules/auth/session";
+import { getEventById, listTicketsForEvent } from "@/modules/events/store";
+import { buildEventParticipantsCsv } from "@/modules/operations/store";
+
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ eventId: string }> },
+) {
+  const session = await getCurrentSession();
+  if (!session || (session.role !== "ORGANIZER" && session.role !== "PLATFORM_ADMIN")) {
+    return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
+  }
+
+  const { eventId } = await context.params;
+  const event = getEventById(eventId);
+  if (!event) {
+    return NextResponse.json({ error: "Événement introuvable." }, { status: 404 });
+  }
+
+  const tickets = listTicketsForEvent(event.id);
+  const csv = buildEventParticipantsCsv(tickets);
+  const safeFilename = `participants-${event.slug}.csv`;
+
+  return new NextResponse(csv, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${safeFilename}"`,
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
