@@ -6,10 +6,10 @@ import { UEMOA_COUNTRIES } from "@/config/uemoa";
 
 export function Footer() {
   return (
-    <footer className="no-print border-t border-slate-200 bg-[#1B2A4A] text-slate-200">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-          <div>
+    <footer className="no-print border-t border-slate-200 bg-[#1B2A4A] pb-18 text-slate-200 md:pb-0">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <div className="grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-4">
+          <div className="col-span-2 lg:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2.5 text-white">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
                 <Ticket className="h-5 w-5 text-[#5EEAD4]" aria-hidden="true" />
@@ -80,7 +80,7 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
+          <div className="col-span-2 lg:col-span-1">
             <h2 className="text-xs font-bold tracking-wider text-teal-300 uppercase">
               Zone UEMOA &amp; Contact
             </h2>

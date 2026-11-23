@@ -130,6 +130,22 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         <span className="truncate font-semibold text-[#1B2A4A]">{event.title}</span>
       </nav>
 
+      {/* Raccourcis rapides sur mobile (évite de scroller pour accéder aux billets ou à la carte GPS) */}
+      <div className="mb-4 flex gap-2 lg:hidden">
+        <a
+          href="#billets"
+          className="flex-1 rounded-xl bg-[#1B2A4A] px-3.5 py-2.5 text-center text-xs font-bold text-white shadow-xs"
+        >
+          Billets ({minPrice === 0 ? "Gratuit" : `dès ${formatXof(minPrice)}`})
+        </a>
+        <a
+          href="#localisation"
+          className="rounded-xl border border-teal-300 bg-teal-50 px-3.5 py-2.5 text-center text-xs font-bold text-teal-800"
+        >
+          Carte GPS
+        </a>
+      </div>
+
       <div className="grid gap-8 lg:grid-cols-12">
         {/* Colonne principale */}
         <div className="space-y-6 lg:col-span-7">
@@ -314,7 +330,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         </div>
 
         {/* Colonne Billetterie sticky */}
-        <aside className="lg:col-span-5">
+        <aside id="billets" className="scroll-mt-20 lg:col-span-5">
           <div className="sticky top-24 space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-baseline justify-between border-b border-slate-100 pb-4">
               <div>

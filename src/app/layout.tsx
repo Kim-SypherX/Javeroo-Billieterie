@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { SITE_CONFIG } from "@/config/site";
 import { getCurrentSession } from "@/modules/auth/session";
@@ -44,10 +45,11 @@ export default async function RootLayout({
         </a>
         <Header session={session} />
         <ServiceWorkerRegistrar />
-        <main id="main-content" className="flex-1">
+        <main id="main-content" className="flex-1 overflow-x-clip pb-16 md:pb-0">
           {children}
         </main>
         <Footer />
+        <MobileBottomNav session={session} />
       </body>
     </html>
   );

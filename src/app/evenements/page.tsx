@@ -70,36 +70,68 @@ export default async function EvenementsPage({ searchParams }: CatalogPageProps)
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+      <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-bold tracking-wider text-teal-700 uppercase">
+          <p className="text-[11px] font-bold tracking-wider text-teal-700 uppercase sm:text-xs">
             Catalogue vérifié UEMOA
           </p>
-          <h1 className="mt-1 font-display text-3xl font-bold text-[#1B2A4A]">
+          <h1 className="mt-0.5 font-display text-2xl font-bold text-[#1B2A4A] sm:mt-1 sm:text-3xl">
             Tous les événements
           </h1>
-          <p className="mt-1.5 text-sm text-slate-600">
+          <p className="mt-1 hidden text-sm text-slate-600 sm:block">
             Filtrez par pays, ville, date, catégorie ou budget — sans publicité et sans compte
             requis.
           </p>
         </div>
-        <p className="text-sm font-semibold text-slate-700" aria-live="polite">
-          {catalog.total} événement{catalog.total > 1 ? "s" : ""} trouvé
-          {catalog.total > 1 ? "s" : ""}
+        <p className="shrink-0 text-xs font-bold text-slate-700 sm:text-sm" aria-live="polite">
+          {catalog.total} événement{catalog.total > 1 ? "s" : ""}
         </p>
       </div>
 
-      {/* Barre de filtres combinables */}
+      {/* Puces catégories 1-tap horizontales sur mobile */}
+      <div className="no-scrollbar -mx-4 mt-4 flex flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+        <Link
+          href={pays ? `/evenements?pays=${pays}` : "/evenements"}
+          className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+            !categorie
+              ? "bg-[#1B2A4A] text-white"
+              : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+          }`}
+        >
+          Toutes catégories
+        </Link>
+        {EVENT_CATEGORIES.map((cat) => {
+          const active = categorie === cat.id;
+          const href = pays
+            ? `/evenements?categorie=${cat.id}&pays=${pays}`
+            : `/evenements?categorie=${cat.id}`;
+          return (
+            <Link
+              key={cat.id}
+              href={href}
+              className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+                active
+                  ? "bg-teal-600 text-white"
+                  : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              {cat.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Barre de filtres combinables compacte sur mobile */}
       <form
         action="/evenements"
         method="GET"
         role="search"
         aria-label="Filtrer les événements"
-        className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5"
+        className="mt-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs sm:mt-5 sm:p-5"
       >
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-6">
+          <div className="col-span-2">
             <label htmlFor="filter-q" className="block text-xs font-bold text-slate-700 uppercase">
               Recherche
             </label>
@@ -278,10 +310,23 @@ export default async function EvenementsPage({ searchParams }: CatalogPageProps)
           </Link>
         </div>
       ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {catalog.items.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
+        <div className="mt-5 sm:mt-8">
+          <div className="mb-2 flex items-center justify-between text-xs sm:hidden">
+            <span className="font-bold text-[#1B2A4A]">
+              Page {catalog.page}/{catalog.totalPages}
+            </span>
+            <span className="font-semibold text-teal-700">Glissez horizontalement →</span>
+          </div>
+          <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
+            {catalog.items.map((event) => (
+              <div
+                key={event.id}
+                className="w-[84vw] max-w-[340px] shrink-0 snap-start sm:w-auto sm:max-w-none"
+              >
+                <EventCard event={event} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

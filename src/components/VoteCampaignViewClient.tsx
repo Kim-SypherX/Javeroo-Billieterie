@@ -40,6 +40,7 @@ export function VoteCampaignViewClient({
 }: VoteCampaignViewClientProps) {
   const [campaign, setCampaign] = useState<VoteCampaignView>(initialCampaign);
   const [search, setSearch] = useState("");
+  const [mobileLayout, setMobileLayout] = useState<"carousel" | "grid">("carousel");
   const [activeCandidate, setActiveCandidate] = useState<VoteCandidateView | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [lastTxBanner, setLastTxBanner] = useState<VoteTransactionView | null>(null);
@@ -234,21 +235,21 @@ export function VoteCampaignViewClient({
         </div>
       )}
 
-      {/* Podium en direct */}
+      {/* Podium en direct — rail horizontal compact sur mobile */}
       {campaign.showLiveResults ? (
         podium.length > 0 && (
-          <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="flex items-center gap-2 font-display text-lg font-bold text-[#1B2A4A]">
-                <Trophy className="h-5 w-5 text-amber-500" aria-hidden="true" />
-                Classement provisoire en temps réel (Top {podium.length})
+          <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:mt-8 sm:rounded-3xl sm:p-6">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-1.5 font-display text-sm font-bold text-[#1B2A4A] sm:text-lg">
+                <Trophy className="h-4 w-4 text-amber-500 sm:h-5 sm:w-5" aria-hidden="true" />
+                Top {podium.length} en direct
               </h2>
-              <span className="text-xs font-semibold text-slate-500">
-                Total comptabilisé : {totalVotes.toLocaleString("fr-FR")} voix
+              <span className="text-[11px] font-semibold text-slate-500 sm:text-xs">
+                {totalVotes.toLocaleString("fr-FR")} voix · <span className="sm:hidden">Glissez →</span>
               </span>
             </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <div className="no-scrollbar -mx-4 mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:mt-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0">
               {podium.map((cand) => {
                 const medalStyles =
                   cand.rank === 1
@@ -257,23 +258,26 @@ export function VoteCampaignViewClient({
                       ? "border-slate-300 bg-slate-50"
                       : "border-orange-200 bg-orange-50/50";
                 return (
-                  <div key={cand.id} className={`rounded-2xl border p-4 ${medalStyles}`}>
+                  <div
+                    key={cand.id}
+                    className={`w-[68vw] max-w-[245px] shrink-0 snap-start rounded-2xl border p-3.5 sm:w-auto sm:max-w-none sm:p-4 ${medalStyles}`}
+                  >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#1B2A4A] px-2.5 py-0.5 text-xs font-bold text-white">
-                        {cand.rank === 1 && <Crown className="h-3.5 w-3.5 text-amber-300" />}
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#1B2A4A] px-2.5 py-0.5 text-[11px] font-bold text-white">
+                        {cand.rank === 1 && <Crown className="h-3 w-3 text-amber-300" />}
                         #{cand.rank} · {cand.code}
                       </span>
-                      <span className="font-display text-sm font-extrabold text-teal-700">
+                      <span className="font-display text-xs font-extrabold text-teal-700 sm:text-sm">
                         {cand.sharePercent} %
                       </span>
                     </div>
-                    <p className="mt-2 font-display text-base font-bold text-[#1B2A4A]">
+                    <p className="mt-1.5 truncate font-display text-sm font-bold text-[#1B2A4A] sm:text-base">
                       {cand.name}
                     </p>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-[11px] text-slate-600 sm:text-xs">
                       {cand.votesCount.toLocaleString("fr-FR")} voix
                     </p>
-                    <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-white/80">
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/80 sm:h-2">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-[#1B2A4A] to-teal-500 transition-all duration-500"
                         style={{ width: `${Math.max(4, cand.sharePercent)}%` }}
@@ -286,7 +290,7 @@ export function VoteCampaignViewClient({
           </section>
         )
       ) : (
-        <div className="mt-8 flex items-center gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 px-5 py-4 text-xs text-indigo-950">
+        <div className="mt-5 flex items-center gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-xs text-indigo-950 sm:mt-8 sm:px-5 sm:py-4">
           <EyeOff className="h-5 w-5 shrink-0 text-indigo-700" aria-hidden="true" />
           <p>
             <strong>Scores temporairement masqués par l&apos;organisateur</strong> pour garder le
@@ -296,17 +300,42 @@ export function VoteCampaignViewClient({
         </div>
       )}
 
-      {/* Liste des candidats + recherche instantanée */}
-      <section className="mt-8">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="flex items-center gap-2 font-display text-2xl font-bold text-[#1B2A4A]">
-              <Users className="h-6 w-6 text-teal-600" aria-hidden="true" />
-              Choisissez votre candidat ({filteredCandidates.length})
-            </h2>
-            <p className="mt-0.5 text-xs text-slate-600">
-              Votez en 15 secondes par Mobile Money (sans compte) — 0 FCFA de frais ajoutés.
-            </p>
+      {/* Liste des candidats : Carrousel horizontal par défaut sur mobile + bascule Grille 2 col. */}
+      <section className="mt-6 sm:mt-8">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h2 className="flex items-center gap-2 font-display text-xl font-bold text-[#1B2A4A] sm:text-2xl">
+                <Users className="h-5 w-5 text-teal-600 sm:h-6 sm:w-6" aria-hidden="true" />
+                Candidats ({filteredCandidates.length})
+              </h2>
+              <p className="mt-0.5 text-[11px] text-slate-600 sm:text-xs">
+                {mobileLayout === "carousel"
+                  ? "Glissez horizontalement pour voter rapidement →"
+                  : "Votez en 15 s par Mobile Money — 0 FCFA de frais ajoutés."}
+              </p>
+            </div>
+            {/* Bascule Carrousel / Grille 2 col. sur mobile */}
+            <div className="inline-flex shrink-0 rounded-xl border border-slate-200 bg-white p-0.5 text-[11px] font-bold sm:hidden">
+              <button
+                type="button"
+                onClick={() => setMobileLayout("carousel")}
+                className={`rounded-lg px-2.5 py-1 ${
+                  mobileLayout === "carousel" ? "bg-[#1B2A4A] text-white" : "text-slate-600"
+                }`}
+              >
+                Défiler →
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileLayout("grid")}
+                className={`rounded-lg px-2.5 py-1 ${
+                  mobileLayout === "grid" ? "bg-[#1B2A4A] text-white" : "text-slate-600"
+                }`}
+              >
+                Grille ×2
+              </button>
+            </div>
           </div>
           <div className="relative w-full sm:w-80">
             <Search
@@ -318,12 +347,18 @@ export function VoteCampaignViewClient({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher un nom ou code (ex. C01)..."
-              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pr-3.5 pl-10 text-sm"
+              className="w-full rounded-xl border border-slate-300 bg-white py-2 pr-3.5 pl-10 text-sm sm:py-2.5"
             />
           </div>
         </div>
 
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className={
+            mobileLayout === "carousel"
+              ? "no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3"
+              : "mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-5 lg:grid-cols-3"
+          }
+        >
           {filteredCandidates.map((cand) => {
             const photo = cand.photoUrl || cachedPhotos[cand.id];
             const initials = cand.name
@@ -335,7 +370,11 @@ export function VoteCampaignViewClient({
             return (
               <article
                 key={cand.id}
-                className="flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xs transition hover:border-teal-300 hover:shadow-md"
+                className={`flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition hover:border-teal-300 hover:shadow-md sm:rounded-3xl ${
+                  mobileLayout === "carousel"
+                    ? "w-[78vw] max-w-[300px] shrink-0 snap-start sm:w-auto sm:max-w-none"
+                    : ""
+                }`}
               >
                 {/* Visuel candidat */}
                 <div
@@ -357,18 +396,18 @@ export function VoteCampaignViewClient({
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center">
-                      <span className="flex h-24 w-24 items-center justify-center rounded-full bg-white/15 font-display text-3xl font-extrabold text-white ring-2 ring-white/30 backdrop-blur-xs">
+                      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/15 font-display text-2xl font-extrabold text-white ring-2 ring-white/30 backdrop-blur-xs sm:h-24 sm:w-24 sm:text-3xl">
                         {initials}
                       </span>
                     </div>
                   )}
 
-                  <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3.5">
-                    <span className="rounded-full bg-[#1B2A4A]/90 px-3 py-1 font-mono text-xs font-bold text-white backdrop-blur-xs">
-                      Code {cand.code}
+                  <div className="absolute inset-x-0 top-0 flex items-center justify-between p-2.5 sm:p-3.5">
+                    <span className="rounded-full bg-[#1B2A4A]/90 px-2.5 py-0.5 font-mono text-[11px] font-bold text-white backdrop-blur-xs sm:px-3 sm:py-1 sm:text-xs">
+                      {cand.code}
                     </span>
                     {campaign.showLiveResults && (
-                      <span className="rounded-full bg-white/95 px-2.5 py-1 text-xs font-extrabold text-[#1B2A4A] shadow-xs">
+                      <span className="rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-extrabold text-[#1B2A4A] shadow-xs sm:px-2.5 sm:py-1 sm:text-xs">
                         #{cand.rank}
                       </span>
                     )}
@@ -376,22 +415,26 @@ export function VoteCampaignViewClient({
                 </div>
 
                 {/* Infos & actions */}
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="font-display text-lg font-bold text-[#1B2A4A]">{cand.name}</h3>
-                  <p className="text-xs font-semibold text-teal-700">{cand.subtitle}</p>
-                  <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-slate-600">
+                <div className="flex flex-1 flex-col p-3.5 sm:p-5">
+                  <h3 className="truncate font-display text-sm font-bold text-[#1B2A4A] sm:text-lg">
+                    {cand.name}
+                  </h3>
+                  <p className="truncate text-[11px] font-semibold text-teal-700 sm:text-xs">
+                    {cand.subtitle}
+                  </p>
+                  <p className="mt-1.5 hidden line-clamp-2 text-xs leading-relaxed text-slate-600 sm:block">
                     {cand.bio}
                   </p>
 
                   {campaign.showLiveResults && (
-                    <div className="mt-4">
-                      <div className="flex items-baseline justify-between text-xs">
+                    <div className="mt-2.5 sm:mt-4">
+                      <div className="flex items-baseline justify-between text-[11px] sm:text-xs">
                         <span className="font-bold text-[#1B2A4A]">
                           {cand.votesCount.toLocaleString("fr-FR")} voix
                         </span>
                         <span className="font-bold text-teal-700">{cand.sharePercent} %</span>
                       </div>
-                      <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 sm:h-2">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
@@ -403,25 +446,27 @@ export function VoteCampaignViewClient({
                     </div>
                   )}
 
-                  <div className="mt-auto flex items-center gap-2 pt-5">
+                  <div className="mt-auto flex items-center gap-1.5 pt-3 sm:gap-2 sm:pt-5">
                     <button
                       type="button"
                       disabled={campaign.status !== "OPEN"}
                       onClick={() => setActiveCandidate(cand)}
-                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#1B2A4A] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-teal-600 disabled:cursor-not-allowed disabled:opacity-45"
+                      className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#1B2A4A] px-2.5 py-2 text-[11px] font-bold text-white shadow-xs transition hover:bg-teal-600 disabled:cursor-not-allowed disabled:opacity-45 sm:gap-1.5 sm:px-4 sm:py-2.5 sm:text-xs"
                     >
-                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                      {campaign.status === "OPEN"
-                        ? campaign.unitVotePriceXof === 0
-                          ? "Voter"
-                          : `Voter (${formatXof(campaign.unitVotePriceXof)})`
-                        : "Votes fermés"}
+                      <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="truncate">
+                        {campaign.status === "OPEN"
+                          ? campaign.unitVotePriceXof === 0
+                            ? "Voter"
+                            : `Voter (${campaign.unitVotePriceXof} F)`
+                          : "Fermé"}
+                      </span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleWhatsAppShare(cand)}
                       title="Partager sur WhatsApp"
-                      className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100"
+                      className="hidden rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 sm:inline-flex"
                     >
                       WhatsApp
                     </button>
@@ -429,7 +474,7 @@ export function VoteCampaignViewClient({
                       type="button"
                       onClick={() => handleShareCandidate(cand)}
                       aria-label={`Copier le lien direct de ${cand.name}`}
-                      className="rounded-xl border border-slate-200 p-2.5 text-slate-600 hover:bg-slate-50"
+                      className="rounded-xl border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 sm:p-2.5"
                     >
                       {copiedCode === cand.code ? (
                         <Check className="h-4 w-4 text-emerald-600" aria-hidden="true" />

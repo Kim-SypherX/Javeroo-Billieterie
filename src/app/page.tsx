@@ -38,16 +38,16 @@ export default async function HomePage() {
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(14,165,164,0.28),transparent_55%)]"
         />
-        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+        <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-18 lg:px-8">
           <div className="max-w-3xl">
-            <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold tracking-wider text-teal-300 uppercase backdrop-blur-xs">
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold tracking-wider text-teal-300 uppercase backdrop-blur-xs sm:px-3.5 sm:py-1.5 sm:text-xs">
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              Zone UEMOA · {UEMOA_COUNTRIES.length} pays · Devise unique FCFA
+              Zone UEMOA · {UEMOA_COUNTRIES.length} pays · FCFA
             </p>
-            <h1 className="mt-5 font-display text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
+            <h1 className="mt-3 font-display text-2xl font-bold leading-tight tracking-tight sm:mt-5 sm:text-5xl">
               Votes en ligne &amp; Billetterie Mobile Money en 30&nbsp;secondes.
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-200 sm:text-lg">
+            <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-slate-200 sm:mt-4 sm:text-lg">
               Soutenez vos candidats (Miss, Awards, Musique, Concours) et achetez vos billets
               directement sur le web sans compte ni publicité. Promoteurs : zéro abonnement,{" "}
               <strong className="text-teal-300">
@@ -62,7 +62,7 @@ export default async function HomePage() {
               method="GET"
               role="search"
               aria-label="Rechercher un événement"
-              className="mt-8 flex flex-col gap-2.5 rounded-2xl bg-white p-2.5 shadow-xl sm:flex-row sm:items-center"
+              className="mt-5 flex flex-col gap-2 rounded-2xl bg-white p-2 shadow-xl sm:mt-8 sm:flex-row sm:items-center sm:gap-2.5 sm:p-2.5"
             >
               <div className="relative flex-1">
                 <label htmlFor="home-search-q" className="sr-only">
@@ -109,11 +109,11 @@ export default async function HomePage() {
               </button>
             </form>
 
-            {/* Catégories rapides + Accès direct Votes */}
-            <div className="mt-5 flex flex-wrap items-center gap-2">
+            {/* Catégories rapides sur une ligne horizontale défilable sur mobile */}
+            <div className="no-scrollbar -mx-4 mt-4 flex flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:mt-5 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
               <Link
                 href="/votes"
-                className="inline-flex items-center gap-1.5 rounded-full bg-teal-400 px-3.5 py-1 text-xs font-extrabold text-slate-950 transition hover:bg-teal-300"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-teal-400 px-3.5 py-1.5 text-xs font-extrabold text-slate-950 transition hover:bg-teal-300"
               >
                 <Trophy className="h-3.5 w-3.5" aria-hidden="true" />
                 Votes en cours ({voteStats.openCampaignsCount})
@@ -122,7 +122,7 @@ export default async function HomePage() {
                 <Link
                   key={cat.id}
                   href={`/evenements?categorie=${cat.id}`}
-                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-slate-200 transition hover:border-teal-400 hover:bg-teal-500/20 hover:text-white"
+                  className="shrink-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-teal-400 hover:bg-teal-500/20 hover:text-white"
                 >
                   {cat.label}
                 </Link>
@@ -130,8 +130,8 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Indicateurs rendus côté serveur (jamais 0+) */}
-          <div className="mt-12 grid grid-cols-2 gap-3 border-t border-white/10 pt-8 sm:grid-cols-4">
+          {/* Indicateurs en rail horizontal sur mobile -> grille 4 cols sur desktop */}
+          <div className="no-scrollbar -mx-4 mt-7 flex snap-x snap-mandatory gap-2.5 overflow-x-auto border-t border-white/10 px-4 pt-5 sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible sm:px-0 sm:pt-8">
             {[
               { value: `${voteStats.totalVotes.toLocaleString("fr-FR")} voix`, label: "Votes exprimés en direct" },
               {
@@ -144,145 +144,169 @@ export default async function HomePage() {
                 label: "Reversement Mobile Money",
               },
             ].map((item) => (
-              <div key={item.label} className="rounded-2xl bg-white/5 px-4 py-3.5">
-                <p className="font-display text-xl font-bold text-teal-300 sm:text-2xl">
+              <div
+                key={item.label}
+                className="w-[46vw] max-w-[190px] shrink-0 snap-start rounded-2xl bg-white/5 px-3.5 py-3 sm:w-auto sm:max-w-none sm:px-4 sm:py-3.5"
+              >
+                <p className="font-display text-lg font-bold text-teal-300 sm:text-2xl">
                   {item.value}
                 </p>
-                <p className="mt-0.5 text-xs text-slate-300">{item.label}</p>
+                <p className="mt-0.5 text-[11px] text-slate-300 sm:text-xs">{item.label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Mise en avant prioritaire : Concours & Votes en cours */}
+      {/* Mise en avant prioritaire : Concours & Votes en cours (carrousel horizontal sur mobile) */}
       {featuredVotes.length > 0 && (
         <section
           aria-labelledby="votes-une-title"
-          className="border-b border-slate-200 bg-gradient-to-b from-teal-50/60 to-white py-14"
+          className="border-b border-slate-200 bg-gradient-to-b from-teal-50/60 to-white py-8 sm:py-14"
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div className="flex items-end justify-between gap-3">
               <div>
-                <p className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-teal-700 uppercase">
+                <p className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-teal-700 uppercase sm:text-xs">
                   <Trophy className="h-4 w-4" aria-hidden="true" />
-                  Javeroo Votes · Mobile Money en direct
+                  Javeroo Votes · Mobile Money
                 </p>
                 <h2
                   id="votes-une-title"
-                  className="mt-1 font-display text-2xl font-bold text-[#1B2A4A] sm:text-3xl"
+                  className="mt-0.5 font-display text-xl font-bold text-[#1B2A4A] sm:mt-1 sm:text-3xl"
                 >
                   Concours &amp; Votes en cours
                 </h2>
-                <p className="mt-1 text-sm text-slate-600">
-                  Votez par Orange Money, Wave, Moov Money ou MTN MoMo (dès 100 FCFA / voix) — zéro
-                  compte requis, classement temps réel.
-                </p>
               </div>
               <Link
                 href="/votes"
-                className="inline-flex items-center gap-1.5 text-sm font-bold text-teal-700 hover:text-teal-900"
+                className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-teal-700 hover:text-teal-900 sm:text-sm"
               >
-                Voir tous les votes
+                Tout voir
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
+            <p className="mt-1 text-[11px] font-semibold text-slate-500 sm:hidden">
+              Glissez vers la droite pour voir tous les concours →
+            </p>
 
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-8 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
               {featuredVotes.map((campaign) => (
-                <VoteCampaignCard key={campaign.id} campaign={campaign} />
+                <div
+                  key={campaign.id}
+                  className="w-[82vw] max-w-[330px] shrink-0 snap-start sm:w-auto sm:max-w-none"
+                >
+                  <VoteCampaignCard campaign={campaign} />
+                </div>
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* 4 engagements différenciants */}
-      <section aria-labelledby="engagements-title" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="max-w-2xl">
-          <p className="text-xs font-bold tracking-wider text-teal-700 uppercase">
-            Conçu pour le terrain
-          </p>
-          <h2 id="engagements-title" className="mt-1 font-display text-2xl font-bold text-[#1B2A4A] sm:text-3xl">
-            Une billetterie sans friction, pensée pour l&apos;Afrique de l&apos;Ouest
-          </h2>
+      {/* 4 engagements différenciants (rail horizontal sur mobile) */}
+      <section aria-labelledby="engagements-title" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-14 lg:px-8">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-bold tracking-wider text-teal-700 uppercase sm:text-xs">
+              Conçu pour le terrain
+            </p>
+            <h2 id="engagements-title" className="mt-0.5 font-display text-xl font-bold text-[#1B2A4A] sm:mt-1 sm:text-3xl">
+              Sans friction, pensé pour l&apos;Afrique de l&apos;Ouest
+            </h2>
+          </div>
+          <span className="shrink-0 text-[11px] font-semibold text-slate-400 sm:hidden">
+            Glissez →
+          </span>
         </div>
 
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-8 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
           {[
             {
               icon: Smartphone,
               title: "100 % Web · Android & iPhone",
-              desc: "Achetez vos billets et appliquez vos codes promo directement sur le site, sans créer de compte ni installer d'application.",
+              desc: "Achetez vos billets et votez directement sur le site, sans créer de compte ni installer d'application.",
             },
             {
               icon: ShieldCheck,
               title: "Zéro publicité parasite",
-              desc: "Aucune fenêtre publicitaire ne vient interrompre l'acheteur pendant son choix de place ou son paiement Mobile Money.",
+              desc: "Aucune fenêtre publicitaire ne vient interrompre l'acheteur pendant son choix ou son paiement Mobile Money.",
             },
             {
               icon: WifiOff,
               title: "Contrôle porte hors-ligne",
-              desc: "Les agents d'accueil scannent les QR codes sécurisés même si la connexion 4G sature autour du stade ou de la salle.",
+              desc: "Les agents d'accueil scannent les QR codes sécurisés même si la connexion 4G sature autour du stade.",
             },
             {
               icon: QrCode,
               title: "Réception multi-canal",
-              desc: "QR code immédiat à l'écran + PDF téléchargeable + récupération facile par téléphone ou e-mail à tout moment.",
+              desc: "QR code immédiat à l'écran + PDF téléchargeable + récupération facile par téléphone ou e-mail.",
             },
           ].map((feat) => (
             <div
               key={feat.title}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs"
+              className="w-[74vw] max-w-[270px] shrink-0 snap-start rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:w-auto sm:max-w-none sm:p-5"
             >
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
-                <feat.icon className="h-5 w-5" aria-hidden="true" />
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-700 sm:h-10 sm:w-10">
+                <feat.icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
               </span>
-              <h3 className="mt-4 font-display text-base font-bold text-[#1B2A4A]">{feat.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{feat.desc}</p>
+              <h3 className="mt-3 font-display text-sm font-bold text-[#1B2A4A] sm:mt-4 sm:text-base">
+                {feat.title}
+              </h3>
+              <p className="mt-1 text-xs leading-relaxed text-slate-600 sm:mt-1.5 sm:text-sm">
+                {feat.desc}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Événements à la une */}
+      {/* Événements à la une (carrousel horizontal sur mobile) */}
       <section
         aria-labelledby="featured-events-title"
-        className="border-y border-slate-200 bg-white py-14"
+        className="border-y border-slate-200 bg-white py-8 sm:py-14"
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-bold tracking-wider text-teal-700 uppercase">
+              <p className="text-[11px] font-bold tracking-wider text-teal-700 uppercase sm:text-xs">
                 Prochainement près de chez vous
               </p>
               <h2
                 id="featured-events-title"
-                className="mt-1 font-display text-2xl font-bold text-[#1B2A4A] sm:text-3xl"
+                className="mt-0.5 font-display text-xl font-bold text-[#1B2A4A] sm:mt-1 sm:text-3xl"
               >
                 Événements à la une
               </h2>
             </div>
             <Link
               href="/evenements"
-              className="inline-flex items-center gap-1.5 text-sm font-bold text-teal-700 hover:text-teal-800"
+              className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-teal-700 hover:text-teal-800 sm:text-sm"
             >
-              Voir tout le catalogue avec filtres
+              Tout voir
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
+          <p className="mt-1 text-[11px] font-semibold text-slate-500 sm:hidden">
+            Glissez vers la droite pour parcourir les événements →
+          </p>
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-8 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
             {featured.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <div
+                key={event.id}
+                className="w-[82vw] max-w-[330px] shrink-0 snap-start sm:w-auto sm:max-w-none"
+              >
+                <EventCard event={event} />
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Bloc Organisateurs */}
-      <section aria-labelledby="organizers-cta-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-8 rounded-3xl bg-[#1B2A4A] p-8 text-white shadow-xl lg:grid-cols-12 lg:p-12">
+      {/* Bloc Organisateurs compact sur mobile */}
+      <section aria-labelledby="organizers-cta-title" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-14 lg:px-8">
+        <div className="grid items-center gap-6 rounded-2xl bg-[#1B2A4A] p-5 text-white shadow-xl sm:rounded-3xl sm:gap-8 sm:p-8 lg:grid-cols-12 lg:p-12">
           <div className="lg:col-span-7">
             <p className="text-xs font-bold tracking-wider text-teal-300 uppercase">
               Organisateurs &amp; Promoteurs

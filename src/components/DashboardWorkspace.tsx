@@ -237,11 +237,11 @@ export function DashboardWorkspace({
 
   return (
     <div className="mt-8">
-      {/* Barre d'onglets accessible */}
+      {/* Barre d'onglets accessible — défilement horizontal 1 ligne sur mobile */}
       <div
         role="tablist"
         aria-label="Sections de l'espace organisateur"
-        className="flex flex-wrap gap-2 border-b border-slate-200 pb-3"
+        className="no-scrollbar -mx-4 flex flex-nowrap gap-2 overflow-x-auto border-b border-slate-200 px-4 pb-3 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
       >
         {[
           { id: "events" as const, label: "Événements & Création" },
@@ -256,10 +256,10 @@ export function DashboardWorkspace({
             type="button"
             aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+            className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap transition sm:py-2.5 sm:text-sm ${
               activeTab === tab.id
                 ? "bg-[#1B2A4A] text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100"
+                : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
             }`}
           >
             {tab.label}

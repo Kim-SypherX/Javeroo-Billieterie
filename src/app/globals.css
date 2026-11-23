@@ -29,6 +29,17 @@
   }
 }
 
+/* Utilitaires mobile-first : rails horizontaux fluides sans barre de défilement visible */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @media print {
   .no-print {
     display: none !important;
