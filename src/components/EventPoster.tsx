@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Maximize2, X } from "lucide-react";
 import { formatEventDate, getCountryByCode } from "@/config/uemoa";
 import type { EventView } from "@/modules/events/types";
+import { readCachedEventPoster } from "@/modules/media/client-poster";
 
 interface EventPosterProps {
   event: EventView;
@@ -13,10 +14,22 @@ interface EventPosterProps {
 
 export function EventPoster({ event, compact = false, allowLightbox = false }: EventPosterProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [cachedCover, setCachedCover] = useState<string | null>(null);
   const country = getCountryByCode(event.countryCode);
   const { from, via, to, badge, motif } = event.posterTheme;
 
-  if (event.coverImageUrl) {
+  useEffect(() => {
+    if (!event.coverImageUrl) {
+      const localCover = readCachedEventPoster(event.id, event.slug);
+      if (localCover) {
+        setCachedCover(localCover);
+      }
+    }
+  }, [event.coverImageUrl, event.id, event.slug]);
+
+  const resolvedCoverUrl = event.coverImageUrl || cachedCover || undefined;
+
+  if (resolvedCoverUrl) {
     return (
       <>
         <div
@@ -24,7 +37,7 @@ export function EventPoster({ event, compact = false, allowLightbox = false }: E
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={event.coverImageUrl}
+            src={resolvedCoverUrl}
             alt={`Affiche officielle : ${event.title} à ${event.city}`}
             width={1200}
             height={675}
@@ -70,7 +83,7 @@ export function EventPoster({ event, compact = false, allowLightbox = false }: E
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={event.coverImageUrl}
+              src={resolvedCoverUrl}
               alt={`Affiche complète : ${event.title}`}
               className="max-h-[90vh] max-w-full rounded-2xl object-contain shadow-2xl"
               onClick={(e) => e.stopPropagation()}

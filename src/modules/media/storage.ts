@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 export const MAX_POSTER_SIZE_BYTES = 5 * 1024 * 1024; // 5 Mo
-const MAX_INLINE_PREVIEW_BYTES = 450 * 1024; // 450 Ko en fallback preview sans Blob/R2
+const MAX_INLINE_PREVIEW_BYTES = 750 * 1024; // 750 Ko en fallback preview sans Blob/R2
 
 export type AllowedImageMime = "image/jpeg" | "image/png" | "image/webp" | "image/avif";
 
@@ -145,7 +145,7 @@ export async function storePublicEventPoster(buffer: Buffer): Promise<
       return {
         ok: false,
         error:
-          "Activez Vercel Blob (variable BLOB_READ_WRITE_TOKEN) pour téléverser des affiches de plus de 450 Ko sur Vercel.",
+          "L'affiche dépasse 750 Ko en mode sans Vercel Blob. Activez Vercel Blob (BLOB_READ_WRITE_TOKEN) ou réduisez légèrement sa résolution.",
       };
     }
     return {

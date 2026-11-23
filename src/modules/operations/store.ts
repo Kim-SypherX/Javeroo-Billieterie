@@ -485,6 +485,16 @@ export function findActiveScanSessionByCode(accessCode: string): ScanSessionView
   );
 }
 
+export function upsertScanSessionInStore(session: ScanSessionView): void {
+  const state = getOpsState();
+  const existing = state.scanSessions.find((s) => s.id === session.id);
+  if (!existing) {
+    state.scanSessions.unshift(session);
+  } else if (session.isRevoked) {
+    existing.isRevoked = true;
+  }
+}
+
 export async function generateComplimentaryTicket(params: {
   eventId: string;
   eventTitle: string;

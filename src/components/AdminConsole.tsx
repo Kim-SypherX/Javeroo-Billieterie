@@ -30,11 +30,13 @@ import {
   Ticket,
   Trash2,
   TrendingUp,
+  Trophy,
   Users,
   Wallet,
   XCircle,
 } from "lucide-react";
 import { OrganizerEventForm } from "@/components/OrganizerEventForm";
+import { OrganizerVoteManager } from "@/components/OrganizerVoteManager";
 import { formatEventDate, formatXof, PAYMENT_METHODS, UEMOA_COUNTRIES } from "@/config/uemoa";
 import type { ConfiguredSuperAdminSummary } from "@/modules/auth/store";
 import type { EventView, OrderView } from "@/modules/events/types";
@@ -44,6 +46,7 @@ import type {
   KycSubmissionView,
   PayoutRequestView,
 } from "@/modules/operations/store";
+import type { VoteCampaignView, VoteTransactionView } from "@/modules/votes/types";
 
 export interface AdminPlatformKpis {
   totalEvents: number;
@@ -63,6 +66,11 @@ export interface AdminPlatformKpis {
   completedPayoutsAmountXof: number;
   liveOrdersCount: number;
   activeScanGatesCount: number;
+  voteCampaignsCount: number;
+  openVoteCampaignsCount: number;
+  totalVotesCount: number;
+  totalVotesGrossXof: number;
+  totalVotesCommissionXof: number;
 }
 
 export interface AdminCountryStat {
@@ -122,17 +130,23 @@ interface AdminConsoleProps {
   organizers: AdminOrganizerRow[];
   events: EventView[];
   orders: OrderView[];
+  voteCampaigns: VoteCampaignView[];
+  voteTransactions: VoteTransactionView[];
   auditLogs: AuditLogView[];
   superAdmins: ConfiguredSuperAdminSummary[];
   systemStatus: AdminSystemStatus;
 }
 
-type AdminSection = "overview" | "orders" | "catalog" | "promoters" | "finance" | "system";
+type AdminSection = "overview" | "votes" | "orders" | "catalog" | "promoters" | "finance" | "system";
 
 const SECTION_META: Record<AdminSection, { title: string; subtitle: string }> = {
   overview: {
     title: "Vue globale de la plateforme",
-    subtitle: "Indicateurs financiers consolidés, performances par pays UEMOA et alertes prioritaires.",
+    subtitle: "Indicateurs consolidés Billetterie + Votes, performances par pays UEMOA et alertes prioritaires.",
+  },
+  votes: {
+    title: "Votes & Concours payants",
+    subtitle: "Pilotez tous les concours UEMOA (Miss, Awards, Musique), encaissements Mobile Money et campagnes déléguées.",
   },
   orders: {
     title: "Commandes & Transactions",
@@ -167,6 +181,8 @@ export function AdminConsole({
   organizers,
   events,
   orders,
+  voteCampaigns,
+  voteTransactions,
   auditLogs,
   superAdmins,
   systemStatus,
@@ -385,6 +401,13 @@ export function AdminConsole({
     badgeTone?: "amber" | "indigo" | "slate";
   }> = [
     { id: "overview", label: "Vue globale", icon: BarChart3 },
+    {
+      id: "votes",
+      label: "Votes & Concours",
+      icon: Trophy,
+      badge: kpis.voteCampaignsCount,
+      badgeTone: "indigo",
+    },
     {
       id: "orders",
       label: "Commandes & Billets",
@@ -642,7 +665,11 @@ export function AdminConsole({
                     </span>
                   </div>
                   <p className="mt-3 font-display text-2xl font-extrabold text-[#1B2A4A]">
-                    {formatXof(kpis.totalGrossSalesXof)}
+                    {formatXof(kpis.totalGrossSalesXof + kpis.totalVotesGrossXof)}
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold text-teal-700">
+                    Billets {formatXof(kpis.totalGrossSalesXof)} · Votes{" "}
+                    {formatXof(kpis.totalVotesGrossXof)}
                   </p>
                   <div className="mt-2 flex items-center gap-2">
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
@@ -667,11 +694,11 @@ export function AdminConsole({
                     </span>
                   </div>
                   <p className="mt-3 font-display text-2xl font-extrabold text-white">
-                    {formatXof(kpis.totalJaverooCommissionXof)}
+                    {formatXof(kpis.totalJaverooCommissionXof + kpis.totalVotesCommissionXof)}
                   </p>
                   <p className="mt-2 text-xs text-slate-300">
-                    Net promoteurs :{" "}
-                    <strong className="text-white">{formatXof(kpis.totalOrganizerNetXof)}</strong>
+                    Dont <strong className="text-teal-300">{formatXof(kpis.totalVotesCommissionXof)}</strong>{" "}
+                    en votes · {kpis.totalVotesCount.toLocaleString("fr-FR")} voix
                   </p>
                 </div>
 
@@ -1047,6 +1074,111 @@ export function AdminConsole({
                   </ul>
                 </section>
               </div>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* 1B. VOTES & CONCOURS PAYANTS (MOTEUR DE CROISSANCE UEMOA)         */}
+          {/* ================================================================= */}
+          {section === "votes" && (
+            <div className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-[11px] font-bold text-slate-500 uppercase">Voix exprimées</p>
+                  <p className="mt-1 font-display text-2xl font-extrabold text-[#1B2A4A]">
+                    {kpis.totalVotesCount.toLocaleString("fr-FR")}
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {kpis.openVoteCampaignsCount} ouvert(s) / {kpis.voteCampaignsCount} concours
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-[11px] font-bold text-slate-500 uppercase">Volume brut Votes</p>
+                  <p className="mt-1 font-display text-2xl font-extrabold text-[#1B2A4A]">
+                    {formatXof(kpis.totalVotesGrossXof)}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-indigo-200 bg-indigo-50/70 p-4">
+                  <p className="text-[11px] font-bold text-indigo-800 uppercase">
+                    Commissions Javeroo 8 % (Votes)
+                  </p>
+                  <p className="mt-1 font-display text-2xl font-extrabold text-indigo-950">
+                    {formatXof(kpis.totalVotesCommissionXof)}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-teal-200 bg-teal-50/70 p-4">
+                  <p className="text-[11px] font-bold text-teal-800 uppercase">Votes live (session)</p>
+                  <p className="mt-1 font-display text-2xl font-extrabold text-teal-950">
+                    {voteTransactions.length} tx
+                  </p>
+                  <Link
+                    href="/votes"
+                    className="mt-0.5 inline-block text-xs font-bold text-teal-700 hover:underline"
+                  >
+                    Ouvrir /votes public →
+                  </Link>
+                </div>
+              </div>
+
+              <OrganizerVoteManager
+                initialCampaigns={voteCampaigns}
+                delegatedOrganizers={organizers.map((o) => ({
+                  id: o.id,
+                  name: o.name,
+                  city: o.city,
+                  countryCode: o.countryCode,
+                }))}
+                isAdmin
+              />
+
+              {voteTransactions.length > 0 && (
+                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                  <h2 className="font-display text-base font-bold text-[#1B2A4A]">
+                    Dernières transactions de vote en direct ({voteTransactions.length})
+                  </h2>
+                  <div className="mt-4 overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-[11px] text-slate-500 uppercase">
+                          <th className="py-2 pr-3">Réf.</th>
+                          <th className="py-2 pr-3">Concours &amp; Candidat</th>
+                          <th className="py-2 pr-3">Supporter</th>
+                          <th className="py-2 pr-3 text-center">Voix</th>
+                          <th className="py-2 pr-3 text-right">Payé</th>
+                          <th className="py-2 text-right">Comm. 8 %</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {voteTransactions.slice(0, 20).map((tx) => (
+                          <tr key={tx.id}>
+                            <td className="py-2.5 pr-3 font-mono font-bold text-teal-700">
+                              {tx.receiptToken}
+                            </td>
+                            <td className="py-2.5 pr-3">
+                              <p className="font-bold text-[#1B2A4A]">
+                                {tx.candidateName} ({tx.candidateCode})
+                              </p>
+                              <p className="text-[11px] text-slate-500">{tx.campaignTitle}</p>
+                            </td>
+                            <td className="py-2.5 pr-3 text-slate-600">
+                              {tx.voterName} · {tx.voterPhone}
+                            </td>
+                            <td className="py-2.5 pr-3 text-center font-bold text-[#1B2A4A]">
+                              +{tx.votesCount}
+                            </td>
+                            <td className="py-2.5 pr-3 text-right font-bold text-[#1B2A4A]">
+                              {formatXof(tx.totalPaidXof)}
+                            </td>
+                            <td className="py-2.5 text-right font-bold text-indigo-700">
+                              {formatXof(tx.platformCommissionXof)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )}
             </div>
           )}
 

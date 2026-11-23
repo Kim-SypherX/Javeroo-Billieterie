@@ -8,6 +8,7 @@ import type { SessionPayload } from "@/modules/auth/session";
 
 const NAV_ITEMS = [
   { href: "/evenements", label: "Événements" },
+  { href: "/votes", label: "Votes" },
   { href: "/tarifs", label: "Tarifs" },
   { href: "/mes-billets", label: "Mes billets" },
   { href: "/scan", label: "Scan entrée" },

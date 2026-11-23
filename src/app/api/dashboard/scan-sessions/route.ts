@@ -3,6 +3,11 @@ import { z } from "zod";
 import { getCurrentSession } from "@/modules/auth/session";
 import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { getEventById } from "@/modules/events/store";
+import {
+  buildRevokedScanSessionsCookie,
+  buildUpdatedScanSessionsCookie,
+  hydrateScanSessionsIntoStore,
+} from "@/modules/operations/scan-session-cookie";
 import { createScanSession, listScanSessions, revokeScanSession } from "@/modules/operations/store";
 
 const createSchema = z.object({
@@ -31,6 +36,7 @@ export async function POST(request: Request) {
     }
 
     await hydrateCustomEventsIntoStore();
+    await hydrateScanSessionsIntoStore();
 
     const event = getEventById(parsed.data.eventId);
     if (!event) {
@@ -50,7 +56,10 @@ export async function POST(request: Request) {
       actorName: session.fullName,
     });
 
-    return NextResponse.json({ ok: true, scanSession }, { status: 201 });
+    const scanCookie = await buildUpdatedScanSessionsCookie(scanSession);
+    const response = NextResponse.json({ ok: true, scanSession }, { status: 201 });
+    response.cookies.set(scanCookie);
+    return response;
   } catch {
     return NextResponse.json({ ok: false, error: "Impossible de créer l'accès porte." }, { status: 500 });
   }
@@ -69,6 +78,9 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ ok: false, error: "ID de session requis." }, { status: 400 });
     }
 
+    await hydrateCustomEventsIntoStore();
+    await hydrateScanSessionsIntoStore();
+
     const target = listScanSessions().find((s) => s.id === parsed.data.sessionId);
     if (!target) {
       return NextResponse.json({ ok: false, error: "Session introuvable." }, { status: 404 });
@@ -86,7 +98,10 @@ export async function DELETE(request: Request) {
     }
 
     revokeScanSession(parsed.data.sessionId, session.fullName);
-    return NextResponse.json({ ok: true });
+    const revokedCookie = await buildRevokedScanSessionsCookie(parsed.data.sessionId);
+    const response = NextResponse.json({ ok: true });
+    response.cookies.set(revokedCookie);
+    return response;
   } catch {
     return NextResponse.json({ ok: false, error: "Impossible de révoquer la session." }, { status: 500 });
   }

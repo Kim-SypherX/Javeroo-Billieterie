@@ -8,7 +8,14 @@ import { formatXof } from "@/config/uemoa";
 import { getCurrentSession } from "@/modules/auth/session";
 import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { listAllEvents, listEventsForOrganization } from "@/modules/events/store";
+import { hydrateScanSessionsIntoStore } from "@/modules/operations/scan-session-cookie";
 import { getOrganizationWallet, listScanSessions } from "@/modules/operations/store";
+import { hydrateVotesIntoStore } from "@/modules/votes/cookie-store";
+import {
+  listAllVoteCampaigns,
+  listVoteCampaignsForOrganization,
+} from "@/modules/votes/store";
+import { getCampaignGrossXof, getCampaignTotalVotes } from "@/modules/votes/types";
 
 export const dynamic = "force-dynamic";
 
@@ -24,13 +31,20 @@ export default async function DashboardPage() {
   }
 
   await hydrateCustomEventsIntoStore();
+  await hydrateScanSessionsIntoStore();
+  await hydrateVotesIntoStore();
 
   const isAdmin = session.role === "PLATFORM_ADMIN";
   const orgId = session.organizationId ?? "";
 
   // Isolation stricte multi-organisateurs :
-  // Un promoteur ne voit JAMAIS les événements, ventes, codes porte ou chiffres d'un autre promoteur.
+  // Un promoteur ne voit JAMAIS les événements, votes, codes porte ou chiffres d'un autre promoteur.
   const myEvents = isAdmin ? listAllEvents() : orgId ? listEventsForOrganization(orgId) : [];
+  const myVoteCampaigns = isAdmin
+    ? listAllVoteCampaigns()
+    : orgId
+      ? listVoteCampaignsForOrganization(orgId)
+      : [];
   const wallet = getOrganizationWallet(orgId);
   const scanSessions = listScanSessions(myEvents.map((e) => e.id));
 
@@ -38,6 +52,8 @@ export default async function DashboardPage() {
     (sum, evt) => sum + evt.tiers.reduce((tSum, t) => tSum + t.soldQty, 0),
     0,
   );
+  const totalVotesCount = myVoteCampaigns.reduce((sum, c) => sum + getCampaignTotalVotes(c), 0);
+  const totalVotesGrossXof = myVoteCampaigns.reduce((sum, c) => sum + getCampaignGrossXof(c), 0);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -90,18 +106,20 @@ export default async function DashboardPage() {
             {totalTicketsSold.toLocaleString("fr-FR")}
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            Sur {myEvents.length} événement{myEvents.length > 1 ? "s" : ""} créé
-            {myEvents.length > 1 ? "s" : ""}
+            Sur {myEvents.length} événement{myEvents.length > 1 ? "s" : ""} ·{" "}
+            <strong>{totalVotesCount.toLocaleString("fr-FR")} voix</strong> ({myVoteCampaigns.length}{" "}
+            concours)
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
           <p className="text-xs font-bold text-slate-500 uppercase">Vos recettes brutes</p>
           <p className="mt-2 font-display text-2xl font-bold text-[#1B2A4A]">
-            {formatXof(wallet.summary.grossSalesXof)}
+            {formatXof(Math.max(wallet.summary.grossSalesXof, totalVotesGrossXof))}
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            Commission Javeroo ({PRICING_CONFIG.standardCommissionPercent} %) :{" "}
+            Dont {formatXof(totalVotesGrossXof)} en votes · Comm.{" "}
+            {PRICING_CONFIG.standardCommissionPercent} % :{" "}
             {formatXof(wallet.summary.totalCommissionsXof)}
           </p>
         </div>
@@ -137,6 +155,8 @@ export default async function DashboardPage() {
 
       <DashboardWorkspace
         events={myEvents}
+        voteCampaigns={myVoteCampaigns}
+        isAdmin={isAdmin}
         walletSummary={wallet.summary}
         ledgerEntries={wallet.entries}
         payouts={wallet.payouts}

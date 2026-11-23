@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { getEventById, listTicketsForEvent } from "@/modules/events/store";
+import { hydrateScanSessionsIntoStore } from "@/modules/operations/scan-session-cookie";
 import { findActiveScanSessionByCode } from "@/modules/operations/store";
 
 export async function GET(request: Request) {
   await hydrateCustomEventsIntoStore();
+  await hydrateScanSessionsIntoStore();
   const { searchParams } = new URL(request.url);
   const accessCode = searchParams.get("accessCode")?.trim();
   let eventId = searchParams.get("eventId")?.trim() ?? "";

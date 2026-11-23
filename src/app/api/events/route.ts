@@ -27,7 +27,7 @@ const tierSchema = z.object({
 const safeCoverImageSchema = z
   .string()
   .trim()
-  .max(700_000, "L'affiche est trop lourde (réduisez sa taille ou activez Vercel Blob).")
+  .max(1_100_000, "L'affiche est trop lourde (réduisez sa taille ou activez Vercel Blob).")
   .refine(
     (val) =>
       val === "" ||

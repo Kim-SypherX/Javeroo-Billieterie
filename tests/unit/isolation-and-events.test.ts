@@ -12,6 +12,11 @@ import {
   upsertEventInStore,
   validateAndCheckinTicket,
 } from "@/modules/events/store";
+import {
+  parseSignedScanSessions,
+  serializeSignedScanSessions,
+} from "@/modules/operations/scan-session-cookie";
+import { createScanSession } from "@/modules/operations/store";
 import { signTicketPayload } from "@/modules/tickets/crypto";
 
 describe("Team V1 feedback fixes — isolation, multi-tiers, geo & stateless QR", () => {
@@ -122,6 +127,24 @@ describe("Team V1 feedback fixes — isolation, multi-tiers, geo & stateless QR"
 
     // Cookie altéré rejeté
     expect(parseSignedEventsCookie(`${cookieValue}TAMPER`)).toEqual([]);
+  });
+
+  it("sérialise et réhydrate les codes d'accès agent de porte (GATE-*) via cookie signé", () => {
+    const gate = createScanSession({
+      eventId: "evt-ouaga-afro-night",
+      eventTitle: "La Grande Nuit Afrobeat",
+      gateLabel: "Entrée VIP Nord",
+      actorName: "Elvis Jethro",
+    });
+
+    const cookieVal = serializeSignedScanSessions([gate]);
+    const restored = parseSignedScanSessions(cookieVal);
+    expect(restored).toHaveLength(1);
+    expect(restored[0]?.accessCode).toBe(gate.accessCode);
+    expect(restored[0]?.gateLabel).toBe("Entrée VIP Nord");
+
+    // Signature altérée refusée
+    expect(parseSignedScanSessions(`${cookieVal}BAD`)).toEqual([]);
   });
 });
 

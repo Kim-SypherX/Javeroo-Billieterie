@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE_CONFIG } from "@/config/site";
 import { SEED_ORGANIZERS } from "@/modules/events/dev-data";
 import { listAllEvents } from "@/modules/events/store";
+import { listAllVoteCampaigns } from "@/modules/votes/store";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = SITE_CONFIG.baseUrl;
@@ -9,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: now, changeFrequency: "daily", priority: 1.0 },
+    { url: `${base}/votes`, lastModified: now, changeFrequency: "hourly", priority: 0.95 },
     { url: `${base}/evenements`, lastModified: now, changeFrequency: "hourly", priority: 0.9 },
     { url: `${base}/tarifs`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/mentions-legales`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
@@ -16,6 +18,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/cgvps`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/confidentialite`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
+
+  const voteRoutes: MetadataRoute.Sitemap = listAllVoteCampaigns().map((camp) => ({
+    url: `${base}/votes/${camp.slug}`,
+    lastModified: now,
+    changeFrequency: "hourly",
+    priority: 0.9,
+  }));
 
   const eventRoutes: MetadataRoute.Sitemap = listAllEvents().map((evt) => ({
     url: `${base}/evenements/${evt.slug}`,
@@ -31,6 +40,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...eventRoutes, ...organizerRoutes];
+  return [...staticRoutes, ...voteRoutes, ...eventRoutes, ...organizerRoutes];
 }
 

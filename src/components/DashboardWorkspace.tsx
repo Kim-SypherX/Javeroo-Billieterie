@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -24,10 +24,14 @@ import type {
   PayoutRequestView,
   ScanSessionView,
 } from "@/modules/operations/store";
+import type { VoteCampaignView } from "@/modules/votes/types";
 import { OrganizerEventForm } from "./OrganizerEventForm";
+import { OrganizerVoteManager } from "./OrganizerVoteManager";
 
 interface DashboardWorkspaceProps {
   events: EventView[];
+  voteCampaigns: VoteCampaignView[];
+  isAdmin?: boolean;
   walletSummary: OrganizationWalletSummary;
   ledgerEntries: LedgerEntryRecord[];
   payouts: PayoutRequestView[];
@@ -35,10 +39,12 @@ interface DashboardWorkspaceProps {
   scanSessions: ScanSessionView[];
 }
 
-type TabId = "events" | "vip" | "gates" | "finance";
+type TabId = "events" | "votes" | "vip" | "gates" | "finance";
 
 export function DashboardWorkspace({
   events,
+  voteCampaigns,
+  isAdmin = false,
   walletSummary,
   ledgerEntries,
   payouts,
@@ -56,9 +62,24 @@ export function DashboardWorkspace({
   const [vipError, setVipError] = useState<string | null>(null);
 
   // Scan Session (Gate access code) state
+  const [gateSessions, setGateSessions] = useState<ScanSessionView[]>(scanSessions);
   const [gateEventId, setGateEventId] = useState(events[0]?.id ?? "");
   const [gateLabel, setGateLabel] = useState("Porte VIP");
   const [gateLoading, setGateLoading] = useState(false);
+  const [gateMsg, setGateMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  useEffect(() => {
+    setGateSessions(scanSessions);
+  }, [scanSessions]);
+
+  useEffect(() => {
+    if (events.length > 0 && !events.some((ev) => ev.id === gateEventId)) {
+      setGateEventId(events[0]!.id);
+    }
+    if (events.length > 0 && !events.some((ev) => ev.id === vipEventId)) {
+      setVipEventId(events[0]!.id);
+    }
+  }, [events, gateEventId, vipEventId]);
 
   // KYC form state
   const [kycEntity, setKycEntity] = useState<"INDIVIDUAL" | "COMPANY">("COMPANY");
@@ -108,28 +129,57 @@ export function DashboardWorkspace({
 
   async function handleCreateGate(e: React.FormEvent) {
     e.preventDefault();
-    if (!gateEventId || !gateLabel.trim()) return;
+    const targetEventId = gateEventId || events[0]?.id || "";
+    if (!targetEventId || !gateLabel.trim()) {
+      setGateMsg({ ok: false, text: "Sélectionnez un événement et indiquez le nom de la porte." });
+      return;
+    }
     setGateLoading(true);
+    setGateMsg(null);
     try {
-      await fetch("/api/dashboard/scan-sessions", {
+      const res = await fetch("/api/dashboard/scan-sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: gateEventId, gateLabel }),
+        body: JSON.stringify({ eventId: targetEventId, gateLabel: gateLabel.trim() }),
       });
+      const data = await res.json();
+      if (!res.ok || !data.ok || !data.scanSession) {
+        setGateMsg({ ok: false, text: data.error ?? "Impossible de générer le code porte." });
+        return;
+      }
+      const created = data.scanSession as ScanSessionView;
+      setGateSessions((prev) => [created, ...prev.filter((s) => s.id !== created.id)]);
       setGateLabel("");
+      setGateMsg({
+        ok: true,
+        text: `Code porte créé : ${created.accessCode} (${created.gateLabel}). Partagez-le à votre agent d'accueil.`,
+      });
       router.refresh();
+    } catch {
+      setGateMsg({ ok: false, text: "Erreur réseau lors de la création du code porte." });
     } finally {
       setGateLoading(false);
     }
   }
 
   async function handleRevokeGate(sessionId: string) {
-    await fetch("/api/dashboard/scan-sessions", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId }),
-    });
-    router.refresh();
+    setGateMsg(null);
+    try {
+      const res = await fetch("/api/dashboard/scan-sessions", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (res.ok) {
+        setGateSessions((prev) =>
+          prev.map((s) => (s.id === sessionId ? { ...s, isRevoked: true } : s)),
+        );
+        setGateMsg({ ok: true, text: "Code d'accès porte révoqué." });
+        router.refresh();
+      }
+    } catch {
+      setGateMsg({ ok: false, text: "Erreur réseau lors de la révocation." });
+    }
   }
 
   async function handleSubmitKyc(e: React.FormEvent) {
@@ -195,6 +245,7 @@ export function DashboardWorkspace({
       >
         {[
           { id: "events" as const, label: "Événements & Création" },
+          { id: "votes" as const, label: `Votes & Concours (${voteCampaigns.length})` },
           { id: "vip" as const, label: "Invitations VIP & Export CSV" },
           { id: "gates" as const, label: "Équipes Scan (Portes)" },
           { id: "finance" as const, label: "Portefeuille, KYC & Retraits" },
@@ -275,6 +326,13 @@ export function DashboardWorkspace({
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ONGLET 1B : VOTES & CONCOURS */}
+      {activeTab === "votes" && (
+        <div className="mt-6">
+          <OrganizerVoteManager initialCampaigns={voteCampaigns} isAdmin={isAdmin} />
         </div>
       )}
 
@@ -365,7 +423,7 @@ export function DashboardWorkspace({
                     {vipTicket.shortCode}
                   </p>
                   <Link
-                    href={`/scan?eventId=${vipTicket.eventId}&code=${encodeURIComponent(vipTicket.shortCode)}`}
+                    href={`/scan?eventId=${encodeURIComponent(vipTicket.eventId)}&code=${encodeURIComponent(vipTicket.qrPayload)}`}
                     className="mt-2 inline-block font-bold text-[#1B2A4A] underline"
                   >
                     Tester ce billet sur /scan →
@@ -431,6 +489,18 @@ export function DashboardWorkspace({
               Chaque code donne accès uniquement au contrôle des billets de votre événement choisi —
               zéro accès aux recettes ni aux réglages.
             </p>
+            {gateMsg && (
+              <p
+                role="alert"
+                className={`rounded-xl px-3.5 py-2.5 text-xs font-semibold ${
+                  gateMsg.ok
+                    ? "border border-teal-200 bg-teal-50 text-teal-800"
+                    : "border border-red-200 bg-red-50 text-red-700"
+                }`}
+              >
+                {gateMsg.text}
+              </p>
+            )}
             {events.length === 0 ? (
               <p className="rounded-2xl bg-slate-50 p-4 text-xs text-slate-600">
                 Publiez d&apos;abord votre premier événement pour créer des codes d&apos;accès porte
@@ -482,10 +552,16 @@ export function DashboardWorkspace({
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs lg:col-span-7">
             <h2 className="font-display text-lg font-bold text-[#1B2A4A]">
-              Codes d&apos;accès porte actifs ({scanSessions.filter((s) => !s.isRevoked).length})
+              Codes d&apos;accès porte actifs ({gateSessions.filter((s) => !s.isRevoked).length})
             </h2>
+            {gateSessions.length === 0 ? (
+              <p className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-xs text-slate-600">
+                Aucun code d&apos;accès porte généré pour le moment. Créez-en un à gauche pour
+                permettre à vos agents de scanner les billets sans accéder à vos ventes.
+              </p>
+            ) : (
             <ul className="mt-4 space-y-3">
-              {scanSessions.map((s) => (
+              {gateSessions.map((s) => (
                 <li
                   key={s.id}
                   className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 ${
@@ -530,6 +606,7 @@ export function DashboardWorkspace({
                 </li>
               ))}
             </ul>
+            )}
           </div>
         </div>
       )}

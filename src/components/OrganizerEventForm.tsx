@@ -16,6 +16,10 @@ import {
 import { PRICING_CONFIG } from "@/config/pricing";
 import { EVENT_CATEGORIES, type EventCategoryId } from "@/config/site";
 import { UEMOA_COUNTRIES, type UemoaCountryCode } from "@/config/uemoa";
+import {
+  optimizePosterFileForUpload,
+  saveCachedEventPoster,
+} from "@/modules/media/client-poster";
 
 interface TierDraft {
   id: string;
@@ -150,13 +154,15 @@ export function OrganizerEventForm({
   }
 
   async function handlePosterFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
     setUploadingPoster(true);
     setError(null);
     try {
+      // Optimise automatiquement les PNG/JPG haute résolution (Photoshop, Canva...) avant envoi
+      const optimizedFile = await optimizePosterFileForUpload(rawFile);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", optimizedFile);
       const res = await fetch("/api/uploads/poster", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok || !data.ok) {
@@ -168,6 +174,7 @@ export function OrganizerEventForm({
       setError("Erreur réseau lors de l'envoi de l'affiche.");
     } finally {
       setUploadingPoster(false);
+      e.target.value = "";
     }
   }
 
@@ -221,6 +228,10 @@ export function OrganizerEventForm({
         setError(data.error ?? "Impossible de créer l'événement.");
         setSubmitting(false);
         return;
+      }
+
+      if (coverImageUrl && data.event?.id && data.event?.slug) {
+        saveCachedEventPoster(data.event.id, data.event.slug, coverImageUrl);
       }
 
       router.push(`/evenements/${data.event.slug}`);

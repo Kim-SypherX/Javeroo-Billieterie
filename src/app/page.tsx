@@ -7,19 +7,28 @@ import {
   ShieldCheck,
   Smartphone,
   Sparkles,
+  Trophy,
   WifiOff,
 } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
+import { VoteCampaignCard } from "@/components/VoteCampaignCard";
 import { PRICING_CONFIG } from "@/config/pricing";
 import { EVENT_CATEGORIES } from "@/config/site";
 import { UEMOA_COUNTRIES } from "@/config/uemoa";
+import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { getPlatformPublicStats, listFeaturedEvents } from "@/modules/events/store";
+import { hydrateVotesIntoStore } from "@/modules/votes/cookie-store";
+import { getVotesGlobalSummary, listFeaturedVoteCampaigns } from "@/modules/votes/store";
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
+export default async function HomePage() {
+  await hydrateCustomEventsIntoStore();
+  await hydrateVotesIntoStore();
   const featured = listFeaturedEvents(4);
+  const featuredVotes = listFeaturedVoteCampaigns(3);
   const stats = getPlatformPublicStats();
+  const voteStats = getVotesGlobalSummary();
 
   return (
     <div>
@@ -36,11 +45,11 @@ export default function HomePage() {
               Zone UEMOA · {UEMOA_COUNTRIES.length} pays · Devise unique FCFA
             </p>
             <h1 className="mt-5 font-display text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
-              Vos billets d&apos;événements en 30&nbsp;secondes par Mobile Money.
+              Votes en ligne &amp; Billetterie Mobile Money en 30&nbsp;secondes.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-200 sm:text-lg">
-              Achetez directement sur le web sans installer d&apos;application et sans publicité.
-              Organisateurs : zéro abonnement,{" "}
+              Soutenez vos candidats (Miss, Awards, Musique, Concours) et achetez vos billets
+              directement sur le web sans compte ni publicité. Promoteurs : zéro abonnement,{" "}
               <strong className="text-teal-300">
                 {PRICING_CONFIG.standardCommissionPercent}&nbsp;% tout inclus
               </strong>{" "}
@@ -100,9 +109,16 @@ export default function HomePage() {
               </button>
             </form>
 
-            {/* Catégories rapides */}
-            <div className="mt-5 flex flex-wrap gap-2">
-              {EVENT_CATEGORIES.slice(0, 6).map((cat) => (
+            {/* Catégories rapides + Accès direct Votes */}
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <Link
+                href="/votes"
+                className="inline-flex items-center gap-1.5 rounded-full bg-teal-400 px-3.5 py-1 text-xs font-extrabold text-slate-950 transition hover:bg-teal-300"
+              >
+                <Trophy className="h-3.5 w-3.5" aria-hidden="true" />
+                Votes en cours ({voteStats.openCampaignsCount})
+              </Link>
+              {EVENT_CATEGORIES.slice(0, 5).map((cat) => (
                 <Link
                   key={cat.id}
                   href={`/evenements?categorie=${cat.id}`}
@@ -117,12 +133,12 @@ export default function HomePage() {
           {/* Indicateurs rendus côté serveur (jamais 0+) */}
           <div className="mt-12 grid grid-cols-2 gap-3 border-t border-white/10 pt-8 sm:grid-cols-4">
             {[
-              { value: `${stats.countriesCount} pays`, label: "Zone UEMOA · FCFA" },
+              { value: `${voteStats.totalVotes.toLocaleString("fr-FR")} voix`, label: "Votes exprimés en direct" },
               {
                 value: `${PRICING_CONFIG.standardCommissionPercent} %`,
                 label: "Commission max tout inclus",
               },
-              { value: `${stats.eventsCount} événements`, label: "En vente vérifiée" },
+              { value: `${stats.eventsCount} événements`, label: "En vente vérifiée UEMOA" },
               {
                 value: PRICING_CONFIG.payoutSla.mobileMoneyLabel,
                 label: "Reversement Mobile Money",
@@ -138,6 +154,48 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Mise en avant prioritaire : Concours & Votes en cours */}
+      {featuredVotes.length > 0 && (
+        <section
+          aria-labelledby="votes-une-title"
+          className="border-b border-slate-200 bg-gradient-to-b from-teal-50/60 to-white py-14"
+        >
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <p className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-teal-700 uppercase">
+                  <Trophy className="h-4 w-4" aria-hidden="true" />
+                  Javeroo Votes · Mobile Money en direct
+                </p>
+                <h2
+                  id="votes-une-title"
+                  className="mt-1 font-display text-2xl font-bold text-[#1B2A4A] sm:text-3xl"
+                >
+                  Concours &amp; Votes en cours
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Votez par Orange Money, Wave, Moov Money ou MTN MoMo (dès 100 FCFA / voix) — zéro
+                  compte requis, classement temps réel.
+                </p>
+              </div>
+              <Link
+                href="/votes"
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-teal-700 hover:text-teal-900"
+              >
+                Voir tous les votes
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
+
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredVotes.map((campaign) => (
+                <VoteCampaignCard key={campaign.id} campaign={campaign} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 4 engagements différenciants */}
       <section aria-labelledby="engagements-title" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">

@@ -466,3 +466,83 @@ export const auditLogs = pgTable(
   (table) => [index("audit_logs_entity_idx").on(table.entityType, table.entityId)],
 );
 
+// ============================================================================
+// MODULE VOTES PAYANTS & CONCOURS UEMOA (Miss, Awards, Musique, Créateurs...)
+// ============================================================================
+
+export const voteCampaigns = pgTable(
+  "vote_campaigns",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    slug: varchar("slug", { length: 160 }).notNull(),
+    title: varchar("title", { length: 180 }).notNull(),
+    shortSummary: varchar("short_summary", { length: 280 }).notNull(),
+    description: text("description").notNull(),
+    category: varchar("category", { length: 40 }).notNull(),
+    status: varchar("status", { length: 24 }).default("OPEN").notNull(), // OPEN | PAUSED | CLOSED
+    isFeatured: boolean("is_featured").default(false).notNull(),
+    showLiveResults: boolean("show_live_results").default(true).notNull(),
+    countryCode: char("country_code", { length: 2 }).notNull(),
+    city: varchar("city", { length: 100 }).notNull(),
+    unitVotePriceXof: integer("unit_vote_price_xof").default(200).notNull(),
+    commissionBps: integer("commission_bps").default(800).notNull(),
+    coverImageKey: text("cover_image_key"),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("vote_campaigns_slug_unique").on(table.slug),
+    index("vote_campaigns_status_idx").on(table.status, table.countryCode),
+  ],
+);
+
+export const voteCandidates = pgTable(
+  "vote_candidates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    campaignId: uuid("campaign_id")
+      .notNull()
+      .references(() => voteCampaigns.id, { onDelete: "cascade" }),
+    code: varchar("code", { length: 24 }).notNull(),
+    name: varchar("name", { length: 140 }).notNull(),
+    subtitle: varchar("subtitle", { length: 140 }),
+    bio: text("bio"),
+    photoKey: text("photo_key"),
+    votesCount: integer("votes_count").default(0).notNull(),
+    grossRaisedXof: bigint("gross_raised_xof", { mode: "number" }).default(0).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index("vote_candidates_campaign_idx").on(table.campaignId)],
+);
+
+export const voteTransactions = pgTable(
+  "vote_transactions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    receiptToken: varchar("receipt_token", { length: 32 }).notNull(),
+    campaignId: uuid("campaign_id")
+      .notNull()
+      .references(() => voteCampaigns.id, { onDelete: "restrict" }),
+    candidateId: uuid("candidate_id")
+      .notNull()
+      .references(() => voteCandidates.id, { onDelete: "restrict" }),
+    votesCount: integer("votes_count").notNull(),
+    totalPaidXof: integer("total_paid_xof").notNull(),
+    platformCommissionXof: integer("platform_commission_xof").notNull(),
+    organizerNetXof: integer("organizer_net_xof").notNull(),
+    voterName: varchar("voter_name", { length: 140 }),
+    voterPhone: varchar("voter_phone", { length: 32 }).notNull(),
+    paymentMethod: varchar("payment_method", { length: 32 }).notNull(),
+    paymentProviderRef: varchar("payment_provider_ref", { length: 120 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("vote_tx_receipt_unique").on(table.receiptToken),
+    index("vote_tx_campaign_idx").on(table.campaignId, table.createdAt),
+  ],
+);
+

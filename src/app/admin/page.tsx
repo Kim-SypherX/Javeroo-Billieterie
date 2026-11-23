@@ -15,8 +15,15 @@ import { getCurrentSession } from "@/modules/auth/session";
 import { listConfiguredSuperAdmins } from "@/modules/auth/store";
 import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { listAllEvents, listAllOrders, listAllOrganizers } from "@/modules/events/store";
+import { hydrateScanSessionsIntoStore } from "@/modules/operations/scan-session-cookie";
 import { listAllAdminOperations } from "@/modules/operations/store";
 import { readSignedOrdersFromCookie } from "@/modules/orders/receipt-cookie";
+import { hydrateVotesIntoStore } from "@/modules/votes/cookie-store";
+import {
+  getVotesGlobalSummary,
+  listAllVoteCampaigns,
+  listVoteTransactions,
+} from "@/modules/votes/store";
 
 export const dynamic = "force-dynamic";
 
@@ -35,11 +42,16 @@ export default async function AdminPage() {
   }
 
   await hydrateCustomEventsIntoStore();
+  await hydrateScanSessionsIntoStore();
+  await hydrateVotesIntoStore();
 
   const ops = listAllAdminOperations();
   const events = listAllEvents();
   const organizers = listAllOrganizers();
   const superAdmins = listConfiguredSuperAdmins();
+  const voteCampaigns = listAllVoteCampaigns();
+  const voteTransactions = listVoteTransactions();
+  const votesSummary = getVotesGlobalSummary(voteCampaigns);
 
   // Fusionne les commandes en mémoire et celles du cookie signé de la session courante
   const memoryOrders = listAllOrders();
@@ -136,6 +148,11 @@ export default async function AdminPage() {
     completedPayoutsAmountXof,
     liveOrdersCount: orders.length,
     activeScanGatesCount: ops.scanSessions.filter((s) => !s.isRevoked).length,
+    voteCampaignsCount: votesSummary.campaignsCount,
+    openVoteCampaignsCount: votesSummary.openCampaignsCount,
+    totalVotesCount: votesSummary.totalVotes,
+    totalVotesGrossXof: votesSummary.totalGrossXof,
+    totalVotesCommissionXof: votesSummary.totalCommissionXof,
   };
 
   const organizerRows: AdminOrganizerRow[] = organizers.map((org) => {
@@ -204,6 +221,8 @@ export default async function AdminPage() {
       organizers={organizerRows}
       events={events}
       orders={orders}
+      voteCampaigns={voteCampaigns}
+      voteTransactions={voteTransactions}
       auditLogs={ops.auditLogs}
       superAdmins={superAdmins}
       systemStatus={systemStatus}
