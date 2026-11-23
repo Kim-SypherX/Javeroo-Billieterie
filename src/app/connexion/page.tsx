@@ -8,7 +8,8 @@ import { ArrowRight, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 function ConnexionForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextUrl = searchParams.get("next") || "/dashboard";
+  const explicitNext = searchParams.get("next");
+  const nextUrl = explicitNext || "/dashboard";
 
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +32,11 @@ function ConnexionForm() {
         setSubmitting(false);
         return;
       }
-      router.push(target);
+      const destination =
+        !explicitNext && target === "/dashboard" && data.user?.role === "PLATFORM_ADMIN"
+          ? "/admin"
+          : target;
+      router.push(destination);
       router.refresh();
     } catch {
       setError("Erreur réseau lors de la connexion.");

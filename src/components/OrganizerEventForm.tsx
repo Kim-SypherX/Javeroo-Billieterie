@@ -32,8 +32,26 @@ const TIER_PRESETS: Array<{ name: string; priceXof: number; totalQty: number; de
   { name: "Table (5 personnes)", priceXof: 100000, totalQty: 15, description: "Table réservée pour 5 invités." },
 ];
 
-export function OrganizerEventForm() {
+interface DelegatedOrganizerOption {
+  id: string;
+  name: string;
+  city: string;
+  countryCode: string;
+}
+
+interface OrganizerEventFormProps {
+  delegatedOrganizers?: DelegatedOrganizerOption[];
+}
+
+export function OrganizerEventForm({ delegatedOrganizers }: OrganizerEventFormProps = {}) {
   const router = useRouter();
+  const isDelegatedMode = Boolean(delegatedOrganizers && delegatedOrganizers.length > 0);
+  const [targetOrganizationId, setTargetOrganizationId] = useState<string>(
+    delegatedOrganizers?.[0]?.id ?? "__new__",
+  );
+  const [newOrgName, setNewOrgName] = useState("");
+  const [newOrgPhone, setNewOrgPhone] = useState("");
+  const [newOrgEmail, setNewOrgEmail] = useState("");
   const [title, setTitle] = useState("");
   const [shortSummary, setShortSummary] = useState("");
   const [description, setDescription] = useState("");
@@ -175,6 +193,17 @@ export function OrganizerEventForm() {
           })),
           promoCode: promoCode.trim() || undefined,
           promoPercent: promoCode.trim() ? Number(promoPercent) : undefined,
+          ...(isDelegatedMode
+            ? targetOrganizationId === "__new__"
+              ? {
+                  newOrganizer: {
+                    name: newOrgName.trim(),
+                    supportPhone: newOrgPhone.trim() || undefined,
+                    supportEmail: newOrgEmail.trim() || undefined,
+                  },
+                }
+              : { targetOrganizationId }
+            : {}),
         }),
       });
       const data = await res.json();
@@ -199,13 +228,88 @@ export function OrganizerEventForm() {
     >
       <div>
         <h2 className="font-display text-xl font-bold text-[#1B2A4A]">
-          Publier un nouvel événement
+          {isDelegatedMode
+            ? "Publier un événement au nom d'un promoteur"
+            : "Publier un nouvel événement"}
         </h2>
         <p className="mt-1 text-xs text-slate-600">
-          Décrivez votre lieu clairement, ajoutez la localisation GPS pour Google Maps et créez
-          autant de catégories de billets que souhaité (Pass Normal, VIP, Or...).
+          {isDelegatedMode
+            ? "Mode Équipe Javeroo (conciergerie) : sélectionnez le promoteur partenaire ou créez son profil ci-dessous. L'action est tracée dans le journal d'audit."
+            : "Décrivez votre lieu clairement, ajoutez la localisation GPS pour Google Maps et créez autant de catégories de billets que souhaité (Pass Normal, VIP, Or...)."}
         </p>
       </div>
+
+      {isDelegatedMode && delegatedOrganizers && (
+        <div className="space-y-3 rounded-2xl border border-indigo-200 bg-indigo-50/70 p-4">
+          <div>
+            <label
+              htmlFor="delegated-org-select"
+              className="block text-xs font-bold tracking-wider text-indigo-900 uppercase"
+            >
+              Promoteur propriétaire de l&apos;événement *
+            </label>
+            <select
+              id="delegated-org-select"
+              value={targetOrganizationId}
+              onChange={(e) => setTargetOrganizationId(e.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-indigo-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-[#1B2A4A]"
+            >
+              {delegatedOrganizers.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name} ({org.city} · {org.countryCode})
+                </option>
+              ))}
+              <option value="__new__">+ Créer un nouveau promoteur partenaire</option>
+            </select>
+          </div>
+
+          {targetOrganizationId === "__new__" && (
+            <div className="grid gap-3 pt-1 sm:grid-cols-3">
+              <div>
+                <label htmlFor="new-org-name" className="block text-xs font-semibold text-slate-700">
+                  Nom du promoteur *
+                </label>
+                <input
+                  id="new-org-name"
+                  type="text"
+                  required
+                  minLength={2}
+                  value={newOrgName}
+                  onChange={(e) => setNewOrgName(e.target.value)}
+                  placeholder="Ex. Bobo Live Prod"
+                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="new-org-phone" className="block text-xs font-semibold text-slate-700">
+                  WhatsApp / Tél. support
+                </label>
+                <input
+                  id="new-org-phone"
+                  type="tel"
+                  value={newOrgPhone}
+                  onChange={(e) => setNewOrgPhone(e.target.value)}
+                  placeholder="+226 70 00 00 00"
+                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="new-org-email" className="block text-xs font-semibold text-slate-700">
+                  E-mail (optionnel)
+                </label>
+                <input
+                  id="new-org-email"
+                  type="email"
+                  value={newOrgEmail}
+                  onChange={(e) => setNewOrgEmail(e.target.value)}
+                  placeholder="contact@promoteur.com"
+                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {error && (
         <div

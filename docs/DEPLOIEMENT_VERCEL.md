@@ -47,6 +47,21 @@ openssl rand -hex 32
 | `ENABLE_DEMO_ACCOUNTS` | `true` uniquement si vous déployez une démo ; **`false`** en vraie production | Optionnel |
 | `NEXT_PUBLIC_ENABLE_DEMO_ACCOUNTS` | Identique à `ENABLE_DEMO_ACCOUNTS` | Optionnel |
 
+### Comptes SuperAdmin (Équipe Javeroo — accès `/admin`)
+
+Pour créer des accès SuperAdmin sécurisés en production (sans activer les comptes de démo), ajoutez ces variables dans **Vercel → Settings → Environment Variables** (jusqu'à `SUPER_ADMIN_10_*`) :
+
+| Variable | Exemple de valeur |
+| :--- | :--- |
+| `SUPER_ADMIN_1_NAME` | Votre nom (ex. `Kim — Direction Javeroo`) |
+| `SUPER_ADMIN_1_EMAIL` | Votre adresse e-mail de connexion |
+| `SUPER_ADMIN_1_PASSWORD` | Mot de passe fort (≥ 8 caractères) |
+| `SUPER_ADMIN_2_NAME` | `Elvis Jethro` |
+| `SUPER_ADMIN_2_EMAIL` | Adresse e-mail d'Elvis |
+| `SUPER_ADMIN_2_PASSWORD` | Mot de passe fort d'Elvis (≥ 8 caractères) |
+
+> **Astuce :** Vous pouvez aussi ajouter `SUPER_ADMIN_1_PHONE` / `SUPER_ADMIN_2_PHONE` pour autoriser la connexion par numéro WhatsApp. Dès la connexion sur `/connexion`, les comptes SuperAdmin sont automatiquement redirigés vers `/admin`.
+
 ### Base de données PostgreSQL managée (Neon / Supabase / Vercel Storage)
 
 1. Dans Vercel → onglet **Storage** → créez une base **Neon Postgres** (ou branchez un projet **Supabase**).

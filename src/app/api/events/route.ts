@@ -1,7 +1,13 @@
+import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentSession } from "@/modules/auth/session";
-import { createEventFromDashboard, searchEvents } from "@/modules/events/store";
+import {
+  createEventFromDashboard,
+  registerOrganizationInStore,
+  searchEvents,
+} from "@/modules/events/store";
+import { appendAuditLog } from "@/modules/operations/store";
 
 const tierSchema = z.object({
   name: z
@@ -75,6 +81,15 @@ const createEventSchema = z.object({
     .max(10, "Maximum 10 catégories de billets par événement."),
   promoCode: z.string().trim().max(40).optional(),
   promoPercent: z.number().int().min(0).max(90).optional(),
+  // Champs réservés uniquement au SuperAdmin (publication déléguée au nom d'un promoteur)
+  targetOrganizationId: z.string().trim().max(120).optional(),
+  newOrganizer: z
+    .object({
+      name: z.string().trim().min(2, "Indiquez le nom du promoteur.").max(140),
+      supportPhone: z.string().trim().max(40).optional(),
+      supportEmail: z.string().trim().email("E-mail promoteur invalide.").optional().or(z.literal("")),
+    })
+    .optional(),
 });
 
 const FIELD_LABELS: Record<string, string> = {
@@ -132,12 +147,54 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: message }, { status: 400 });
     }
 
+    // Isolation stricte : un ORGANIZER publie toujours pour sa propre organisation.
+    // Un PLATFORM_ADMIN peut cibler un promoteur existant ou en créer un à la volée (mode conciergerie).
+    let resolvedOrgId = session.organizationId;
+    let isDelegated = false;
+
+    if (session.role === "PLATFORM_ADMIN") {
+      if (parsed.data.newOrganizer?.name) {
+        const orgName = parsed.data.newOrganizer.name.trim();
+        const baseSlug = orgName
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "")
+          .slice(0, 60);
+        const createdOrg = registerOrganizationInStore({
+          id: `org-${crypto.randomBytes(5).toString("hex")}`,
+          slug: `${baseSlug || "promoteur"}-${crypto.randomBytes(2).toString("hex")}`,
+          name: orgName,
+          countryCode: parsed.data.countryCode,
+          city: parsed.data.city,
+          supportPhone: parsed.data.newOrganizer.supportPhone?.trim() || "",
+          supportEmail: parsed.data.newOrganizer.supportEmail?.trim() || "",
+        });
+        resolvedOrgId = createdOrg.id;
+        isDelegated = true;
+      } else if (parsed.data.targetOrganizationId) {
+        resolvedOrgId = parsed.data.targetOrganizationId;
+        isDelegated = true;
+      }
+    }
+
     const created = createEventFromDashboard({
       ...parsed.data,
       coverImageUrl: parsed.data.coverImageUrl || undefined,
       mapsUrl: parsed.data.mapsUrl || undefined,
-      organizationId: session.organizationId,
+      organizationId: resolvedOrgId,
     });
+
+    if (session.role === "PLATFORM_ADMIN" && isDelegated) {
+      appendAuditLog(
+        session.fullName,
+        "DELEGATED_EVENT_CREATED",
+        `${created.title} (${created.organizer.name})`,
+        `Événement publié en gestion déléguée avec ${created.tiers.length} catégorie(s) de billets.`,
+      );
+    }
+
     return NextResponse.json({ ok: true, event: created }, { status: 201 });
   } catch {
     return NextResponse.json(

@@ -778,4 +778,8 @@ export function listEventsForOrganization(organizationId: string): EventView[] {
   return getState().events.filter((e) => e.organizerId === organizationId);
 }
 
+export function listAllOrganizers(): OrganizerView[] {
+  return [...getState().organizers];
+}
+
 
