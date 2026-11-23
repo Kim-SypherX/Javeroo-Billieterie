@@ -426,8 +426,8 @@ export function AdminConsole({
   const pendingPayoutList = payouts.filter((p) => p.status === "REQUESTED");
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-100/80">
-      <div className="mx-auto flex max-w-[1600px] flex-col lg:flex-row">
+    <div className="min-h-[calc(100vh-4rem)] w-full bg-slate-100/80">
+      <div className="flex w-full flex-col lg:flex-row">
         {/* SIDEBAR EXÉCUTIVE SUPERADMIN (Desktop) */}
         <aside className="hidden w-72 shrink-0 flex-col justify-between bg-[#0F1B33] text-slate-200 lg:sticky lg:top-16 lg:flex lg:h-[calc(100vh-4rem)]">
           <div className="overflow-y-auto p-5">
@@ -577,7 +577,8 @@ export function AdminConsole({
         </div>
 
         {/* ZONE PRINCIPALE DE CONTENU */}
-        <main className="min-w-0 flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
+        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+          <div className="mx-auto max-w-7xl space-y-6">
           {/* Top Command Header */}
           <header className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs sm:flex-row sm:items-center">
             <div>
@@ -1851,6 +1852,7 @@ export function AdminConsole({
               </section>
             </div>
           )}
+          </div>
         </main>
       </div>
     </div>

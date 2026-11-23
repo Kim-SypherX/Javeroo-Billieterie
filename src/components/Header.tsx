@@ -21,6 +21,7 @@ export function Header({ session }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isAdminRoute = pathname.startsWith("/admin");
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -31,7 +32,11 @@ export function Header({ session }: HeaderProps) {
 
   return (
     <header className="no-print sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div
+        className={`flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 ${
+          isAdminRoute ? "w-full" : "mx-auto max-w-7xl"
+        }`}
+      >
         <Link
           href="/"
           className="flex items-center gap-2.5 text-[#1B2A4A] transition-opacity hover:opacity-90"
