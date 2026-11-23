@@ -6,6 +6,7 @@ import { DashboardWorkspace } from "@/components/DashboardWorkspace";
 import { PRICING_CONFIG } from "@/config/pricing";
 import { formatXof } from "@/config/uemoa";
 import { getCurrentSession } from "@/modules/auth/session";
+import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { listAllEvents, listEventsForOrganization } from "@/modules/events/store";
 import { getOrganizationWallet, listScanSessions } from "@/modules/operations/store";
 
@@ -21,6 +22,8 @@ export default async function DashboardPage() {
   if (!session || (session.role !== "ORGANIZER" && session.role !== "PLATFORM_ADMIN")) {
     redirect("/connexion?next=/dashboard");
   }
+
+  await hydrateCustomEventsIntoStore();
 
   const isAdmin = session.role === "PLATFORM_ADMIN";
   const orgId = session.organizationId ?? "";

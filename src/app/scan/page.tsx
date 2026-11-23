@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ScanConsole } from "@/components/ScanConsole";
 import { getCurrentSession } from "@/modules/auth/session";
+import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { getEventById, listAllEvents, listEventsForOrganization } from "@/modules/events/store";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,7 @@ interface ScanPageProps {
 }
 
 export default async function ScanPage({ searchParams }: ScanPageProps) {
+  await hydrateCustomEventsIntoStore();
   const params = await searchParams;
   const eventId = typeof params.eventId === "string" ? params.eventId : undefined;
   const code = typeof params.code === "string" ? params.code : undefined;

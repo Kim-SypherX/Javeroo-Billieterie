@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { createCheckoutOrder } from "@/modules/events/store";
 import { buildUpdatedReceiptCookie } from "@/modules/orders/receipt-cookie";
 
@@ -44,6 +45,8 @@ export async function POST(request: Request) {
       const firstIssue = parsed.error.issues[0]?.message ?? "Données de commande invalides.";
       return NextResponse.json({ ok: false, error: firstIssue }, { status: 400 });
     }
+
+    await hydrateCustomEventsIntoStore();
 
     const result = await createCheckoutOrder({
       eventId: parsed.data.eventId,

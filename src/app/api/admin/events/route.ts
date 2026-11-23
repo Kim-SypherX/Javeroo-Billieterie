@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentSession } from "@/modules/auth/session";
-import { toggleEventFeaturedFlag } from "@/modules/events/store";
+import {
+  buildCustomEventsCookieWithout,
+  hydrateCustomEventsIntoStore,
+} from "@/modules/events/custom-event-cookie";
+import { deleteEventById, toggleEventFeaturedFlag } from "@/modules/events/store";
 import { appendAuditLog } from "@/modules/operations/store";
 
 const modSchema = z.object({
@@ -15,6 +19,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    await hydrateCustomEventsIntoStore();
     const body = await request.json();
     const parsed = modSchema.safeParse(body);
     if (!parsed.success) {
@@ -36,6 +41,41 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, event: { id: updated.id, isFeatured: updated.isFeatured } });
   } catch {
     return NextResponse.json({ ok: false, error: "Erreur de modération." }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  const session = await getCurrentSession();
+  if (!session || session.role !== "PLATFORM_ADMIN") {
+    return NextResponse.json({ ok: false, error: "Accès réservé aux administrateurs." }, { status: 403 });
+  }
+
+  try {
+    await hydrateCustomEventsIntoStore();
+    const body = await request.json();
+    const parsed = modSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ ok: false, error: "eventId requis." }, { status: 400 });
+    }
+
+    const removed = deleteEventById(parsed.data.eventId);
+    if (!removed) {
+      return NextResponse.json({ ok: false, error: "Événement introuvable." }, { status: 404 });
+    }
+
+    appendAuditLog(
+      session.fullName,
+      "EVENT_REMOVED",
+      removed.title,
+      `Événement retiré du catalogue par SuperAdmin (${removed.organizer.name}).`,
+    );
+
+    const updatedCookie = await buildCustomEventsCookieWithout(removed.id);
+    const response = NextResponse.json({ ok: true, removedId: removed.id });
+    response.cookies.set(updatedCookie);
+    return response;
+  } catch {
+    return NextResponse.json({ ok: false, error: "Impossible de supprimer cet événement." }, { status: 500 });
   }
 }
 

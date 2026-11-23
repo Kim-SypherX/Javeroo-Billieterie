@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentSession } from "@/modules/auth/session";
 import {
+  buildUpdatedCustomEventsCookie,
+  hydrateCustomEventsIntoStore,
+} from "@/modules/events/custom-event-cookie";
+import {
   createEventFromDashboard,
   registerOrganizationInStore,
   searchEvents,
@@ -108,6 +112,7 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 export async function GET(request: Request) {
+  await hydrateCustomEventsIntoStore();
   const { searchParams } = new URL(request.url);
   const result = searchEvents({
     pays: searchParams.get("pays") ?? undefined,
@@ -147,10 +152,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: message }, { status: 400 });
     }
 
+    await hydrateCustomEventsIntoStore();
+
     // Isolation stricte : un ORGANIZER publie toujours pour sa propre organisation.
-    // Un PLATFORM_ADMIN peut cibler un promoteur existant ou en créer un à la volée (mode conciergerie).
+    // Si l'instance serverless n'a pas encore son profil organisation en mémoire, on le réhydrate depuis la session signée.
     let resolvedOrgId = session.organizationId;
     let isDelegated = false;
+
+    if (session.role === "ORGANIZER" && session.organizationId) {
+      const orgName = session.organizationName || session.fullName;
+      const baseSlug = orgName
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "")
+        .slice(0, 60);
+      registerOrganizationInStore({
+        id: session.organizationId,
+        slug: `${baseSlug || "organisateur"}-${session.organizationId.slice(-4)}`,
+        name: orgName,
+        countryCode: parsed.data.countryCode,
+        city: parsed.data.city,
+        supportPhone: "",
+        supportEmail: session.email,
+      });
+    }
 
     if (session.role === "PLATFORM_ADMIN") {
       if (parsed.data.newOrganizer?.name) {
@@ -195,7 +222,10 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ ok: true, event: created }, { status: 201 });
+    const customEventsCookie = await buildUpdatedCustomEventsCookie(created);
+    const response = NextResponse.json({ ok: true, event: created }, { status: 201 });
+    response.cookies.set(customEventsCookie);
+    return response;
   } catch {
     return NextResponse.json(
       { ok: false, error: "Impossible de créer l'événement." },

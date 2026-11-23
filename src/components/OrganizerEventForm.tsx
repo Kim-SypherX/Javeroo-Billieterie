@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ImagePlus,
@@ -41,14 +41,24 @@ interface DelegatedOrganizerOption {
 
 interface OrganizerEventFormProps {
   delegatedOrganizers?: DelegatedOrganizerOption[];
+  selectedOrganizationId?: string;
 }
 
-export function OrganizerEventForm({ delegatedOrganizers }: OrganizerEventFormProps = {}) {
+export function OrganizerEventForm({
+  delegatedOrganizers,
+  selectedOrganizationId,
+}: OrganizerEventFormProps = {}) {
   const router = useRouter();
   const isDelegatedMode = Boolean(delegatedOrganizers && delegatedOrganizers.length > 0);
   const [targetOrganizationId, setTargetOrganizationId] = useState<string>(
-    delegatedOrganizers?.[0]?.id ?? "__new__",
+    selectedOrganizationId || delegatedOrganizers?.[0]?.id || "__new__",
   );
+
+  useEffect(() => {
+    if (selectedOrganizationId) {
+      setTargetOrganizationId(selectedOrganizationId);
+    }
+  }, [selectedOrganizationId]);
   const [newOrgName, setNewOrgName] = useState("");
   const [newOrgPhone, setNewOrgPhone] = useState("");
   const [newOrgEmail, setNewOrgEmail] = useState("");

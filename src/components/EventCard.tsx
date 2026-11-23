@@ -46,10 +46,15 @@ export function EventCard({ event }: EventCardProps) {
         </h3>
 
         <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-600">
-          <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-teal-600" aria-hidden="true" />
           <span className="truncate">
             {event.venueName} · {event.city}, {country.name}
           </span>
+          {(event.latitude !== undefined || event.mapsUrl) && (
+            <span className="ml-auto shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700 ring-1 ring-teal-200">
+              GPS
+            </span>
+          )}
         </p>
 
         <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">

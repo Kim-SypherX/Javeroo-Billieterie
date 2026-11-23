@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentSession } from "@/modules/auth/session";
+import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { getEventById } from "@/modules/events/store";
 import { createScanSession, listScanSessions, revokeScanSession } from "@/modules/operations/store";
 
@@ -28,6 +29,8 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+
+    await hydrateCustomEventsIntoStore();
 
     const event = getEventById(parsed.data.eventId);
     if (!event) {

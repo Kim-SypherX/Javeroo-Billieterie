@@ -4,6 +4,7 @@ import { Filter, RotateCcw, Search } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
 import { EVENT_CATEGORIES } from "@/config/site";
 import { UEMOA_COUNTRIES } from "@/config/uemoa";
+import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { searchEvents } from "@/modules/events/store";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,7 @@ function getParam(
 }
 
 export default async function EvenementsPage({ searchParams }: CatalogPageProps) {
+  await hydrateCustomEventsIntoStore();
   const raw = await searchParams;
   const pays = getParam(raw, "pays");
   const ville = getParam(raw, "ville");

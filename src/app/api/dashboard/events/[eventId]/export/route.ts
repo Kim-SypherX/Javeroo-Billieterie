@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/modules/auth/session";
+import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { getEventById, listTicketsForEvent } from "@/modules/events/store";
 import { buildEventParticipantsCsv } from "@/modules/operations/store";
 
@@ -11,6 +12,8 @@ export async function GET(
   if (!session || (session.role !== "ORGANIZER" && session.role !== "PLATFORM_ADMIN")) {
     return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
   }
+
+  await hydrateCustomEventsIntoStore();
 
   const { eventId } = await context.params;
   const event = getEventById(eventId);

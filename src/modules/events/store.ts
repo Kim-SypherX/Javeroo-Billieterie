@@ -782,4 +782,31 @@ export function listAllOrganizers(): OrganizerView[] {
   return [...getState().organizers];
 }
 
+export function listAllOrders(): OrderView[] {
+  return [...getState().orders];
+}
+
+/**
+ * Réhydrate un événement (et son organisateur si absent) dans le store en mémoire
+ * sans écraser une copie locale plus riche (ex. affiche base64 ou ventes déjà incrémentées).
+ */
+export function upsertEventInStore(event: EventView): void {
+  const state = getState();
+  if (!state.organizers.some((o) => o.id === event.organizer.id)) {
+    state.organizers.push(event.organizer);
+  }
+  const existing = state.events.find((e) => e.id === event.id || e.slug === event.slug);
+  if (!existing) {
+    state.events.unshift(event);
+  }
+}
+
+export function deleteEventById(eventId: string): EventView | null {
+  const state = getState();
+  const idx = state.events.findIndex((e) => e.id === eventId);
+  if (idx === -1) return null;
+  const [removed] = state.events.splice(idx, 1);
+  return removed ?? null;
+}
+
 

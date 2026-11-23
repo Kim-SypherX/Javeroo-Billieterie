@@ -343,7 +343,9 @@ export function listAllAdminOperations() {
   return {
     kycSubmissions: state.kycSubmissions,
     payouts: state.payouts,
-    auditLogs: state.auditLogs.slice(0, 30),
+    ledgerEntries: state.ledgerEntries.slice(0, 60),
+    scanSessions: state.scanSessions,
+    auditLogs: state.auditLogs.slice(0, 50),
   };
 }
 

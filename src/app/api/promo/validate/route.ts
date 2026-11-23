@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { validateEventPromoCode } from "@/modules/events/store";
 
 const bodySchema = z.object({
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
       );
     }
 
+    await hydrateCustomEventsIntoStore();
     const result = validateEventPromoCode(parsed.data.eventId, parsed.data.code);
     return NextResponse.json(result, { status: result.valid ? 200 : 404 });
   } catch {

@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  parseSignedEventsCookie,
+  serializeSignedEventsCookie,
+} from "@/modules/events/custom-event-cookie";
+import {
   createEventFromDashboard,
+  deleteEventById,
+  getEventBySlug,
   listEventsForOrganization,
   registerOrganizationInStore,
+  upsertEventInStore,
   validateAndCheckinTicket,
 } from "@/modules/events/store";
 import { signTicketPayload } from "@/modules/tickets/crypto";
@@ -72,6 +79,49 @@ describe("Team V1 feedback fixes — isolation, multi-tiers, geo & stateless QR"
       gateLabel: "Porte VIP",
     });
     expect(second.status).toBe("ALREADY_USED");
+  });
+
+  it("sérialise et réhydrate un événement personnalisé via cookie signé entre instances serverless (zéro 404)", () => {
+    const created = createEventFromDashboard({
+      organizationId: "org-elvis-test",
+      title: "Concert Test Serverless",
+      shortSummary: "Test cross-lambda avec GPS et multi-catégories.",
+      description: "Événement de test pour vérifier l'ouverture de la fiche et l'achat sur Vercel.",
+      category: "concert",
+      countryCode: "BF",
+      city: "Ouagadougou",
+      venueName: "Palais des Sports",
+      venueAddress: "Ouaga 2000",
+      locationHint: "Juste après le monument des Martyrs",
+      latitude: 12.3112,
+      longitude: -1.5018,
+      startsAt: "2026-12-28T20:00",
+      endsAt: "2026-12-28T23:59",
+      tiers: [
+        { name: "Pass Normal", priceXof: 5000, totalQty: 100 },
+        { name: "Pass VIP", priceXof: 15000, totalQty: 50 },
+      ],
+    });
+
+    const cookieValue = serializeSignedEventsCookie([created]);
+    expect(cookieValue.length).toBeLessThanOrEqual(3700);
+
+    // Simule une autre instance serverless ne contenant pas l'événement en mémoire
+    deleteEventById(created.id);
+    expect(getEventBySlug(created.slug)).toBeNull();
+
+    // Réhydratation depuis le cookie signé
+    const parsed = parseSignedEventsCookie(cookieValue);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]?.slug).toBe(created.slug);
+    expect(parsed[0]?.latitude).toBe(12.3112);
+    expect(parsed[0]?.tiers).toHaveLength(2);
+
+    upsertEventInStore(parsed[0]!);
+    expect(getEventBySlug(created.slug)?.id).toBe(created.id);
+
+    // Cookie altéré rejeté
+    expect(parseSignedEventsCookie(`${cookieValue}TAMPER`)).toEqual([]);
   });
 });
 

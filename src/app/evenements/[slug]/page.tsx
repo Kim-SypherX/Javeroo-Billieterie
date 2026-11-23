@@ -6,8 +6,10 @@ import {
   BadgeCheck,
   Calendar,
   Clock,
+  Compass,
   ExternalLink,
   MapPin,
+  Navigation,
   ShieldCheck,
   Tag,
 } from "lucide-react";
@@ -21,6 +23,7 @@ import {
   getCountryByCode,
   PAYMENT_METHODS,
 } from "@/config/uemoa";
+import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
 import { getEventBySlug } from "@/modules/events/store";
 import { getEventMinPriceXof, getTierRemaining } from "@/modules/events/types";
 
@@ -31,6 +34,7 @@ interface EventDetailPageProps {
 }
 
 export async function generateMetadata({ params }: EventDetailPageProps): Promise<Metadata> {
+  await hydrateCustomEventsIntoStore();
   const { slug } = await params;
   const event = getEventBySlug(slug);
   if (!event) {
@@ -50,6 +54,7 @@ export async function generateMetadata({ params }: EventDetailPageProps): Promis
 }
 
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
+  await hydrateCustomEventsIntoStore();
   const { slug } = await params;
   const event = getEventBySlug(slug);
   if (!event) notFound();
@@ -58,13 +63,15 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const category = EVENT_CATEGORY_MAP[event.category];
   const minPrice = getEventMinPriceXof(event);
   const shareUrl = `${SITE_CONFIG.baseUrl}/evenements/${event.slug}`;
+  const hasExactGps = event.latitude !== undefined && event.longitude !== undefined;
+  const mapsQuery = hasExactGps
+    ? `${event.latitude},${event.longitude}`
+    : `${event.venueName}, ${event.venueAddress}, ${event.city}, ${country.name}`;
   const mapsUrl =
     event.mapsUrl ||
-    (event.latitude !== undefined && event.longitude !== undefined
-      ? `https://www.google.com/maps/search/?api=1&query=${event.latitude},${event.longitude}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          `${event.venueName}, ${event.venueAddress}, ${event.city}, ${country.name}`,
-        )}`);
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`;
+  const mapsDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapsQuery)}`;
+  const mapsEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(mapsQuery)}&z=${hasExactGps ? 16 : 14}&output=embed`;
 
   // Données structurées JSON-LD schema.org/Event pour rich snippets Google
   const jsonLd = {
@@ -192,6 +199,87 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 {event.description.split("\n\n").map((para, idx) => (
                   <p key={idx}>{para}</p>
                 ))}
+              </div>
+            </div>
+
+            {/* Section Localisation interactive côté client (Carte GPS + Repères simples) */}
+            <div
+              id="localisation"
+              className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-5 py-3.5">
+                <div className="flex items-center gap-2">
+                  <Navigation className="h-4 w-4 text-teal-600" aria-hidden="true" />
+                  <h2 className="font-display text-base font-bold text-[#1B2A4A]">
+                    Localisation &amp; Comment s&apos;y rendre
+                  </h2>
+                </div>
+                {hasExactGps && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-0.5 font-mono text-[11px] font-bold text-teal-800 ring-1 ring-teal-200">
+                    GPS vérifié · {event.latitude?.toFixed(4)}, {event.longitude?.toFixed(4)}
+                  </span>
+                )}
+              </div>
+
+              {/* Carte interactive intégrée */}
+              <div className="relative h-64 w-full bg-slate-200 sm:h-72">
+                <iframe
+                  title={`Carte de localisation : ${event.venueName} à ${event.city}`}
+                  src={mapsEmbedUrl}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="h-full w-full border-0"
+                  allowFullScreen
+                />
+              </div>
+
+              {/* Double guide : GPS + Repères sans Maps */}
+              <div className="grid gap-4 p-5 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-teal-700 uppercase">
+                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                    Itinéraire GPS (Google Maps)
+                  </p>
+                  <p className="mt-1.5 text-sm font-bold text-[#1B2A4A]">{event.venueName}</p>
+                  <p className="mt-0.5 text-xs text-slate-600">
+                    {event.venueAddress} · {event.city}, {country.name}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <a
+                      href={mapsDirectionsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-teal-700"
+                    >
+                      <Navigation className="h-3.5 w-3.5" aria-hidden="true" />
+                      Lancer l&apos;itinéraire GPS
+                    </a>
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Ouvrir Maps
+                      <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                    </a>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-amber-900 uppercase">
+                    <Compass className="h-3.5 w-3.5" aria-hidden="true" />
+                    Sans Google Maps (Repères simples)
+                  </p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-amber-950">
+                    {event.locationHint
+                      ? event.locationHint
+                      : `Demandez simplement « ${event.venueName} » au quartier ${event.venueAddress} (${event.city}).`}
+                  </p>
+                  <p className="mt-2 text-[11px] text-amber-800/80">
+                    Astuce : montrez cette adresse ou le nom du lieu au chauffeur de taxi / moto.
+                  </p>
+                </div>
               </div>
             </div>
 
