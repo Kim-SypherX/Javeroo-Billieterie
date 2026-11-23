@@ -27,6 +27,7 @@ import {
   type VoteCandidateView,
   type VoteTransactionView,
 } from "@/modules/votes/types";
+import { MobileCarousel } from "./MobileCarousel";
 import { VoteModal } from "./VoteModal";
 
 interface VoteCampaignViewClientProps {
@@ -249,43 +250,45 @@ export function VoteCampaignViewClient({
               </span>
             </div>
 
-            <div className="no-scrollbar -mx-4 mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:mt-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0">
-              {podium.map((cand) => {
-                const medalStyles =
-                  cand.rank === 1
-                    ? "border-amber-300 bg-amber-50/70"
-                    : cand.rank === 2
-                      ? "border-slate-300 bg-slate-50"
-                      : "border-orange-200 bg-orange-50/50";
-                return (
-                  <div
-                    key={cand.id}
-                    className={`w-[68vw] max-w-[245px] shrink-0 snap-start rounded-2xl border p-3.5 sm:w-auto sm:max-w-none sm:p-4 ${medalStyles}`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#1B2A4A] px-2.5 py-0.5 text-[11px] font-bold text-white">
-                        {cand.rank === 1 && <Crown className="h-3 w-3 text-amber-300" />}
-                        #{cand.rank} · {cand.code}
-                      </span>
-                      <span className="font-display text-xs font-extrabold text-teal-700 sm:text-sm">
-                        {cand.sharePercent} %
-                      </span>
+            <div className="mt-3 sm:mt-4">
+              <MobileCarousel
+                ariaLabel="Podium Top 3 en direct"
+                gridClassName="sm:grid sm:grid-cols-3 sm:gap-4"
+              >
+                {podium.map((cand) => {
+                  const medalStyles =
+                    cand.rank === 1
+                      ? "border-amber-300 bg-amber-50/70"
+                      : cand.rank === 2
+                        ? "border-slate-300 bg-slate-50"
+                        : "border-orange-200 bg-orange-50/50";
+                  return (
+                    <div key={cand.id} className={`rounded-2xl border p-4 ${medalStyles}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[#1B2A4A] px-2.5 py-0.5 text-xs font-bold text-white">
+                          {cand.rank === 1 && <Crown className="h-3.5 w-3.5 text-amber-300" />}
+                          #{cand.rank} · {cand.code}
+                        </span>
+                        <span className="font-display text-sm font-extrabold text-teal-700">
+                          {cand.sharePercent} %
+                        </span>
+                      </div>
+                      <p className="mt-2 truncate font-display text-base font-bold text-[#1B2A4A]">
+                        {cand.name}
+                      </p>
+                      <p className="text-xs text-slate-600">
+                        {cand.votesCount.toLocaleString("fr-FR")} voix
+                      </p>
+                      <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-white/80">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#1B2A4A] to-teal-500 transition-all duration-500"
+                          style={{ width: `${Math.max(4, cand.sharePercent)}%` }}
+                        />
+                      </div>
                     </div>
-                    <p className="mt-1.5 truncate font-display text-sm font-bold text-[#1B2A4A] sm:text-base">
-                      {cand.name}
-                    </p>
-                    <p className="text-[11px] text-slate-600 sm:text-xs">
-                      {cand.votesCount.toLocaleString("fr-FR")} voix
-                    </p>
-                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/80 sm:h-2">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#1B2A4A] to-teal-500 transition-all duration-500"
-                        style={{ width: `${Math.max(4, cand.sharePercent)}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </MobileCarousel>
             </div>
           </section>
         )
@@ -352,142 +355,235 @@ export function VoteCampaignViewClient({
           </div>
         </div>
 
-        <div
-          className={
-            mobileLayout === "carousel"
-              ? "no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3"
-              : "mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-5 lg:grid-cols-3"
-          }
-        >
-          {filteredCandidates.map((cand) => {
-            const photo = cand.photoUrl || cachedPhotos[cand.id];
-            const initials = cand.name
-              .split(/\s+/)
-              .slice(0, 2)
-              .map((p) => p[0]?.toUpperCase() ?? "")
-              .join("");
+        {mobileLayout === "carousel" ? (
+          <div className="mt-4 sm:mt-6">
+            <MobileCarousel
+              ariaLabel="Liste des candidats"
+              gridClassName="sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
+            >
+              {filteredCandidates.map((cand) => {
+                const photo = cand.photoUrl || cachedPhotos[cand.id];
+                const initials = cand.name
+                  .split(/\s+/)
+                  .slice(0, 2)
+                  .map((p) => p[0]?.toUpperCase() ?? "")
+                  .join("");
 
-            return (
-              <article
-                key={cand.id}
-                className={`flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition hover:border-teal-300 hover:shadow-md sm:rounded-3xl ${
-                  mobileLayout === "carousel"
-                    ? "w-[78vw] max-w-[300px] shrink-0 snap-start sm:w-auto sm:max-w-none"
-                    : ""
-                }`}
-              >
-                {/* Visuel candidat */}
-                <div
-                  className="relative aspect-[4/3] w-full overflow-hidden"
-                  style={
-                    photo
-                      ? undefined
-                      : {
-                          background: `linear-gradient(135deg, #1B2A4A 0%, ${cand.accentColor} 100%)`,
-                        }
-                  }
-                >
-                  {photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={photo}
-                      alt={`Portrait de ${cand.name}`}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center">
-                      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/15 font-display text-2xl font-extrabold text-white ring-2 ring-white/30 backdrop-blur-xs sm:h-24 sm:w-24 sm:text-3xl">
-                        {initials}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="absolute inset-x-0 top-0 flex items-center justify-between p-2.5 sm:p-3.5">
-                    <span className="rounded-full bg-[#1B2A4A]/90 px-2.5 py-0.5 font-mono text-[11px] font-bold text-white backdrop-blur-xs sm:px-3 sm:py-1 sm:text-xs">
-                      {cand.code}
-                    </span>
-                    {campaign.showLiveResults && (
-                      <span className="rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-extrabold text-[#1B2A4A] shadow-xs sm:px-2.5 sm:py-1 sm:text-xs">
-                        #{cand.rank}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Infos & actions */}
-                <div className="flex flex-1 flex-col p-3.5 sm:p-5">
-                  <h3 className="truncate font-display text-sm font-bold text-[#1B2A4A] sm:text-lg">
-                    {cand.name}
-                  </h3>
-                  <p className="truncate text-[11px] font-semibold text-teal-700 sm:text-xs">
-                    {cand.subtitle}
-                  </p>
-                  <p className="mt-1.5 hidden line-clamp-2 text-xs leading-relaxed text-slate-600 sm:block">
-                    {cand.bio}
-                  </p>
-
-                  {campaign.showLiveResults && (
-                    <div className="mt-2.5 sm:mt-4">
-                      <div className="flex items-baseline justify-between text-[11px] sm:text-xs">
-                        <span className="font-bold text-[#1B2A4A]">
-                          {cand.votesCount.toLocaleString("fr-FR")} voix
-                        </span>
-                        <span className="font-bold text-teal-700">{cand.sharePercent} %</span>
-                      </div>
-                      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 sm:h-2">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.max(3, cand.sharePercent)}%`,
-                            backgroundColor: cand.accentColor,
-                          }}
+                return (
+                  <article
+                    key={cand.id}
+                    className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition hover:border-teal-300 hover:shadow-md sm:rounded-3xl"
+                  >
+                    <div
+                      className="relative aspect-[4/3] w-full overflow-hidden"
+                      style={
+                        photo
+                          ? undefined
+                          : {
+                              background: `linear-gradient(135deg, #1B2A4A 0%, ${cand.accentColor} 100%)`,
+                            }
+                      }
+                    >
+                      {photo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={photo}
+                          alt={`Portrait de ${cand.name}`}
+                          className="h-full w-full object-cover"
                         />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white/15 font-display text-3xl font-extrabold text-white ring-2 ring-white/30 backdrop-blur-xs sm:h-24 sm:w-24">
+                            {initials}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3.5">
+                        <span className="rounded-full bg-[#1B2A4A]/90 px-3 py-1 font-mono text-xs font-bold text-white backdrop-blur-xs">
+                          Code {cand.code}
+                        </span>
+                        {campaign.showLiveResults && (
+                          <span className="rounded-full bg-white/95 px-2.5 py-1 text-xs font-extrabold text-[#1B2A4A] shadow-xs">
+                            #{cand.rank}
+                          </span>
+                        )}
                       </div>
                     </div>
-                  )}
 
-                  <div className="mt-auto flex items-center gap-1.5 pt-3 sm:gap-2 sm:pt-5">
-                    <button
-                      type="button"
-                      disabled={campaign.status !== "OPEN"}
-                      onClick={() => setActiveCandidate(cand)}
-                      className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#1B2A4A] px-2.5 py-2 text-[11px] font-bold text-white shadow-xs transition hover:bg-teal-600 disabled:cursor-not-allowed disabled:opacity-45 sm:gap-1.5 sm:px-4 sm:py-2.5 sm:text-xs"
-                    >
-                      <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                      <span className="truncate">
-                        {campaign.status === "OPEN"
-                          ? campaign.unitVotePriceXof === 0
-                            ? "Voter"
-                            : `Voter (${campaign.unitVotePriceXof} F)`
-                          : "Fermé"}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleWhatsAppShare(cand)}
-                      title="Partager sur WhatsApp"
-                      className="hidden rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 sm:inline-flex"
-                    >
-                      WhatsApp
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleShareCandidate(cand)}
-                      aria-label={`Copier le lien direct de ${cand.name}`}
-                      className="rounded-xl border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 sm:p-2.5"
-                    >
-                      {copiedCode === cand.code ? (
-                        <Check className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-                      ) : (
-                        <Share2 className="h-4 w-4" aria-hidden="true" />
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="font-display text-lg font-bold text-[#1B2A4A]">{cand.name}</h3>
+                      <p className="text-xs font-semibold text-teal-700">{cand.subtitle}</p>
+                      <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-600">
+                        {cand.bio}
+                      </p>
+
+                      {campaign.showLiveResults && (
+                        <div className="mt-4">
+                          <div className="flex items-baseline justify-between text-xs">
+                            <span className="font-bold text-[#1B2A4A]">
+                              {cand.votesCount.toLocaleString("fr-FR")} voix
+                            </span>
+                            <span className="font-bold text-teal-700">{cand.sharePercent} %</span>
+                          </div>
+                          <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: `${Math.max(3, cand.sharePercent)}%`,
+                                backgroundColor: cand.accentColor,
+                              }}
+                            />
+                          </div>
+                        </div>
                       )}
-                    </button>
+
+                      <div className="mt-auto flex items-center gap-2 pt-4">
+                        <button
+                          type="button"
+                          disabled={campaign.status !== "OPEN"}
+                          onClick={() => setActiveCandidate(cand)}
+                          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#1B2A4A] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-teal-600 disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                          {campaign.status === "OPEN"
+                            ? campaign.unitVotePriceXof === 0
+                              ? "Voter"
+                              : `Voter (${formatXof(campaign.unitVotePriceXof)})`
+                            : "Votes fermés"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleWhatsAppShare(cand)}
+                          title="Partager sur WhatsApp"
+                          className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100"
+                        >
+                          WhatsApp
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleShareCandidate(cand)}
+                          aria-label={`Copier le lien direct de ${cand.name}`}
+                          className="rounded-xl border border-slate-200 p-2.5 text-slate-600 hover:bg-slate-50"
+                        >
+                          {copiedCode === cand.code ? (
+                            <Check className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                          ) : (
+                            <Share2 className="h-4 w-4" aria-hidden="true" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </MobileCarousel>
+          </div>
+        ) : (
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-5 lg:grid-cols-3">
+            {filteredCandidates.map((cand) => {
+              const photo = cand.photoUrl || cachedPhotos[cand.id];
+              const initials = cand.name
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((p) => p[0]?.toUpperCase() ?? "")
+                .join("");
+
+              return (
+                <article
+                  key={cand.id}
+                  className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition hover:border-teal-300 hover:shadow-md sm:rounded-3xl"
+                >
+                  <div
+                    className="relative aspect-[4/3] w-full overflow-hidden"
+                    style={
+                      photo
+                        ? undefined
+                        : {
+                            background: `linear-gradient(135deg, #1B2A4A 0%, ${cand.accentColor} 100%)`,
+                          }
+                    }
+                  >
+                    {photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={photo}
+                        alt={`Portrait de ${cand.name}`}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/15 font-display text-xl font-extrabold text-white ring-2 ring-white/30 backdrop-blur-xs">
+                          {initials}
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 top-0 flex items-center justify-between p-2">
+                      <span className="rounded-full bg-[#1B2A4A]/90 px-2 py-0.5 font-mono text-[10px] font-bold text-white">
+                        {cand.code}
+                      </span>
+                      {campaign.showLiveResults && (
+                        <span className="rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-extrabold text-[#1B2A4A]">
+                          #{cand.rank}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+
+                  <div className="flex flex-1 flex-col p-3">
+                    <h3 className="truncate font-display text-sm font-bold text-[#1B2A4A]">
+                      {cand.name}
+                    </h3>
+                    <p className="truncate text-[11px] font-semibold text-teal-700">
+                      {cand.subtitle}
+                    </p>
+                    {campaign.showLiveResults && (
+                      <div className="mt-2">
+                        <div className="flex items-baseline justify-between text-[11px]">
+                          <span className="font-bold text-[#1B2A4A]">
+                            {cand.votesCount.toLocaleString("fr-FR")}
+                          </span>
+                          <span className="font-bold text-teal-700">{cand.sharePercent}%</span>
+                        </div>
+                        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${Math.max(4, cand.sharePercent)}%`,
+                              backgroundColor: cand.accentColor,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-auto flex items-center gap-1 pt-3">
+                      <button
+                        type="button"
+                        disabled={campaign.status !== "OPEN"}
+                        onClick={() => setActiveCandidate(cand)}
+                        className="flex-1 rounded-xl bg-[#1B2A4A] px-2 py-2 text-[11px] font-bold text-white hover:bg-teal-600 disabled:opacity-45"
+                      >
+                        {campaign.status === "OPEN" ? "Voter" : "Fermé"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleShareCandidate(cand)}
+                        aria-label={`Copier le lien de ${cand.name}`}
+                        className="rounded-xl border border-slate-200 p-2 text-slate-600"
+                      >
+                        {copiedCode === cand.code ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-600" />
+                        ) : (
+                          <Share2 className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Règlement & Transparence */}

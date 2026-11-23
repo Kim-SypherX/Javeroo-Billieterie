@@ -11,6 +11,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
+import { MobileCarousel } from "@/components/MobileCarousel";
 import { VoteCampaignCard } from "@/components/VoteCampaignCard";
 import { PRICING_CONFIG } from "@/config/pricing";
 import { EVENT_CATEGORIES } from "@/config/site";
@@ -130,15 +131,15 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Indicateurs en rail horizontal sur mobile -> grille 4 cols sur desktop */}
-          <div className="no-scrollbar -mx-4 mt-7 flex snap-x snap-mandatory gap-2.5 overflow-x-auto border-t border-white/10 px-4 pt-5 sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible sm:px-0 sm:pt-8">
+          {/* Indicateurs en grille exacte 2x2 sur mobile -> 4 cols sur desktop (zéro découpe) */}
+          <div className="mt-6 grid grid-cols-2 gap-2.5 border-t border-white/10 pt-5 sm:mt-10 sm:grid-cols-4 sm:gap-3 sm:pt-8">
             {[
-              { value: `${voteStats.totalVotes.toLocaleString("fr-FR")} voix`, label: "Votes exprimés en direct" },
+              { value: `${voteStats.totalVotes.toLocaleString("fr-FR")} voix`, label: "Votes en direct" },
               {
                 value: `${PRICING_CONFIG.standardCommissionPercent} %`,
-                label: "Commission max tout inclus",
+                label: "Commission max",
               },
-              { value: `${stats.eventsCount} événements`, label: "En vente vérifiée UEMOA" },
+              { value: `${stats.eventsCount} événements`, label: "En vente UEMOA" },
               {
                 value: PRICING_CONFIG.payoutSla.mobileMoneyLabel,
                 label: "Reversement Mobile Money",
@@ -146,7 +147,7 @@ export default async function HomePage() {
             ].map((item) => (
               <div
                 key={item.label}
-                className="w-[46vw] max-w-[190px] shrink-0 snap-start rounded-2xl bg-white/5 px-3.5 py-3 sm:w-auto sm:max-w-none sm:px-4 sm:py-3.5"
+                className="rounded-2xl bg-white/5 px-3.5 py-3 sm:px-4 sm:py-3.5"
               >
                 <p className="font-display text-lg font-bold text-teal-300 sm:text-2xl">
                   {item.value}
@@ -158,7 +159,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Mise en avant prioritaire : Concours & Votes en cours (carrousel horizontal sur mobile) */}
+      {/* Mise en avant prioritaire : Concours & Votes en cours (1 carte complète par vue sur mobile) */}
       {featuredVotes.length > 0 && (
         <section
           aria-labelledby="votes-une-title"
@@ -186,82 +187,77 @@ export default async function HomePage() {
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
-            <p className="mt-1 text-[11px] font-semibold text-slate-500 sm:hidden">
-              Glissez vers la droite pour voir tous les concours →
-            </p>
 
-            <div className="no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-8 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
-              {featuredVotes.map((campaign) => (
-                <div
-                  key={campaign.id}
-                  className="w-[82vw] max-w-[330px] shrink-0 snap-start sm:w-auto sm:max-w-none"
-                >
-                  <VoteCampaignCard campaign={campaign} />
-                </div>
-              ))}
+            <div className="mt-4 sm:mt-8">
+              <MobileCarousel
+                ariaLabel="Concours et votes en cours"
+                gridClassName="sm:grid sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
+              >
+                {featuredVotes.map((campaign) => (
+                  <VoteCampaignCard key={campaign.id} campaign={campaign} />
+                ))}
+              </MobileCarousel>
             </div>
           </div>
         </section>
       )}
 
-      {/* 4 engagements différenciants (rail horizontal sur mobile) */}
+      {/* 4 engagements différenciants (1 carte complète par vue sur mobile) */}
       <section aria-labelledby="engagements-title" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-14 lg:px-8">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-bold tracking-wider text-teal-700 uppercase sm:text-xs">
-              Conçu pour le terrain
-            </p>
-            <h2 id="engagements-title" className="mt-0.5 font-display text-xl font-bold text-[#1B2A4A] sm:mt-1 sm:text-3xl">
-              Sans friction, pensé pour l&apos;Afrique de l&apos;Ouest
-            </h2>
-          </div>
-          <span className="shrink-0 text-[11px] font-semibold text-slate-400 sm:hidden">
-            Glissez →
-          </span>
+        <div>
+          <p className="text-[11px] font-bold tracking-wider text-teal-700 uppercase sm:text-xs">
+            Conçu pour le terrain
+          </p>
+          <h2 id="engagements-title" className="mt-0.5 font-display text-xl font-bold text-[#1B2A4A] sm:mt-1 sm:text-3xl">
+            Sans friction, pensé pour l&apos;Afrique de l&apos;Ouest
+          </h2>
         </div>
 
-        <div className="no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-8 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
-          {[
-            {
-              icon: Smartphone,
-              title: "100 % Web · Android & iPhone",
-              desc: "Achetez vos billets et votez directement sur le site, sans créer de compte ni installer d'application.",
-            },
-            {
-              icon: ShieldCheck,
-              title: "Zéro publicité parasite",
-              desc: "Aucune fenêtre publicitaire ne vient interrompre l'acheteur pendant son choix ou son paiement Mobile Money.",
-            },
-            {
-              icon: WifiOff,
-              title: "Contrôle porte hors-ligne",
-              desc: "Les agents d'accueil scannent les QR codes sécurisés même si la connexion 4G sature autour du stade.",
-            },
-            {
-              icon: QrCode,
-              title: "Réception multi-canal",
-              desc: "QR code immédiat à l'écran + PDF téléchargeable + récupération facile par téléphone ou e-mail.",
-            },
-          ].map((feat) => (
-            <div
-              key={feat.title}
-              className="w-[74vw] max-w-[270px] shrink-0 snap-start rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:w-auto sm:max-w-none sm:p-5"
-            >
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-700 sm:h-10 sm:w-10">
-                <feat.icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-              </span>
-              <h3 className="mt-3 font-display text-sm font-bold text-[#1B2A4A] sm:mt-4 sm:text-base">
-                {feat.title}
-              </h3>
-              <p className="mt-1 text-xs leading-relaxed text-slate-600 sm:mt-1.5 sm:text-sm">
-                {feat.desc}
-              </p>
-            </div>
-          ))}
+        <div className="mt-4 sm:mt-8">
+          <MobileCarousel
+            ariaLabel="Engagements Javeroo"
+            gridClassName="sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-4"
+          >
+            {[
+              {
+                icon: Smartphone,
+                title: "100 % Web · Android & iPhone",
+                desc: "Achetez vos billets et votez directement sur le site, sans créer de compte ni installer d'application.",
+              },
+              {
+                icon: ShieldCheck,
+                title: "Zéro publicité parasite",
+                desc: "Aucune fenêtre publicitaire ne vient interrompre l'acheteur pendant son choix ou son paiement Mobile Money.",
+              },
+              {
+                icon: WifiOff,
+                title: "Contrôle porte hors-ligne",
+                desc: "Les agents d'accueil scannent les QR codes sécurisés même si la connexion 4G sature autour du stade.",
+              },
+              {
+                icon: QrCode,
+                title: "Réception multi-canal",
+                desc: "QR code immédiat à l'écran + PDF téléchargeable + récupération facile par téléphone ou e-mail.",
+              },
+            ].map((feat) => (
+              <div
+                key={feat.title}
+                className="h-full rounded-2xl border border-slate-200 bg-white p-5 shadow-xs"
+              >
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+                  <feat.icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <h3 className="mt-3.5 font-display text-base font-bold text-[#1B2A4A]">
+                  {feat.title}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{feat.desc}</p>
+              </div>
+            ))}
+          </MobileCarousel>
         </div>
       </section>
 
-      {/* Événements à la une (carrousel horizontal sur mobile) */}
+      {/* Événements à la une (1 carte complète par vue sur mobile) */}
       <section
         aria-labelledby="featured-events-title"
         className="border-y border-slate-200 bg-white py-8 sm:py-14"
@@ -287,19 +283,16 @@ export default async function HomePage() {
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
-          <p className="mt-1 text-[11px] font-semibold text-slate-500 sm:hidden">
-            Glissez vers la droite pour parcourir les événements →
-          </p>
 
-          <div className="no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-8 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
-            {featured.map((event) => (
-              <div
-                key={event.id}
-                className="w-[82vw] max-w-[330px] shrink-0 snap-start sm:w-auto sm:max-w-none"
-              >
-                <EventCard event={event} />
-              </div>
-            ))}
+          <div className="mt-4 sm:mt-8">
+            <MobileCarousel
+              ariaLabel="Événements à la une"
+              gridClassName="sm:grid sm:grid-cols-2 sm:gap-6 lg:grid-cols-4"
+            >
+              {featured.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </MobileCarousel>
           </div>
         </div>
       </section>

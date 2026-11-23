@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Filter, PlusCircle, RotateCcw, Search, Trophy } from "lucide-react";
+import { MobileCarousel } from "@/components/MobileCarousel";
 import { VoteCampaignCard } from "@/components/VoteCampaignCard";
 import { UEMOA_COUNTRIES } from "@/config/uemoa";
 import { hydrateVotesIntoStore } from "@/modules/votes/cookie-store";
@@ -218,22 +219,14 @@ export default async function VotesCatalogPage({ searchParams }: VotesPageProps)
         </div>
       ) : (
         <div className="mt-5 sm:mt-8">
-          <div className="mb-2 flex items-center justify-between text-xs sm:hidden">
-            <span className="font-bold text-[#1B2A4A]">
-              {campaigns.length} concours disponible{campaigns.length > 1 ? "s" : ""}
-            </span>
-            <span className="font-semibold text-teal-700">Glissez horizontalement →</span>
-          </div>
-          <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
+          <MobileCarousel
+            ariaLabel="Catalogue des concours de vote"
+            gridClassName="sm:grid sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
+          >
             {campaigns.map((campaign) => (
-              <div
-                key={campaign.id}
-                className="w-[84vw] max-w-[340px] shrink-0 snap-start sm:w-auto sm:max-w-none"
-              >
-                <VoteCampaignCard campaign={campaign} />
-              </div>
+              <VoteCampaignCard key={campaign.id} campaign={campaign} />
             ))}
-          </div>
+          </MobileCarousel>
         </div>
       )}
     </div>

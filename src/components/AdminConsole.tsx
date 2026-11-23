@@ -653,9 +653,9 @@ export function AdminConsole({
           {/* ================================================================= */}
           {section === "overview" && (
             <div className="space-y-6">
-              {/* 4 Cartes KPI Premium — rail horizontal sur mobile */}
-              <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-4">
-                <div className="w-[76vw] max-w-[280px] shrink-0 snap-start rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:w-auto sm:max-w-none sm:p-5">
+              {/* 4 Cartes KPI Premium — grille exacte 2x2 sur mobile -> 4 cols sur desktop */}
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs sm:p-5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold tracking-wide text-slate-500 uppercase">
                       Volume Brut (GMV)
@@ -684,7 +684,7 @@ export function AdminConsole({
                   </div>
                 </div>
 
-                <div className="w-[76vw] max-w-[280px] shrink-0 snap-start rounded-2xl bg-gradient-to-br from-[#1B2A4A] to-[#283E6B] p-4 text-white shadow-sm sm:w-auto sm:max-w-none sm:p-5">
+                <div className="rounded-2xl bg-gradient-to-br from-[#1B2A4A] to-[#283E6B] p-3.5 text-white shadow-sm sm:p-5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold tracking-wide text-teal-300 uppercase">
                       Revenus Javeroo ({kpis.commissionPercent} %)
@@ -702,7 +702,7 @@ export function AdminConsole({
                   </p>
                 </div>
 
-                <div className="w-[76vw] max-w-[280px] shrink-0 snap-start rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:w-auto sm:max-w-none sm:p-5">
+                <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs sm:p-5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold tracking-wide text-slate-500 uppercase">
                       Billets &amp; Catalogue
@@ -724,7 +724,7 @@ export function AdminConsole({
                   </p>
                 </div>
 
-                <div className="w-[76vw] max-w-[280px] shrink-0 snap-start rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:w-auto sm:max-w-none sm:p-5">
+                <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs sm:p-5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold tracking-wide text-slate-500 uppercase">
                       Reversements 48 h &amp; KYC
@@ -1082,31 +1082,31 @@ export function AdminConsole({
           {/* ================================================================= */}
           {section === "votes" && (
             <div className="space-y-6">
-              <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-4">
-                <div className="w-[70vw] max-w-[250px] shrink-0 snap-start rounded-2xl border border-slate-200 bg-white p-4 sm:w-auto sm:max-w-none">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4">
                   <p className="text-[11px] font-bold text-slate-500 uppercase">Voix exprimées</p>
-                  <p className="mt-1 font-display text-2xl font-extrabold text-[#1B2A4A]">
+                  <p className="mt-1 font-display text-xl font-extrabold text-[#1B2A4A] sm:text-2xl">
                     {kpis.totalVotesCount.toLocaleString("fr-FR")}
                   </p>
-                  <p className="mt-0.5 text-xs text-slate-500">
+                  <p className="mt-0.5 text-[11px] text-slate-500 sm:text-xs">
                     {kpis.openVoteCampaignsCount} ouvert(s) / {kpis.voteCampaignsCount} concours
                   </p>
                 </div>
-                <div className="w-[70vw] max-w-[250px] shrink-0 snap-start rounded-2xl border border-slate-200 bg-white p-4 sm:w-auto sm:max-w-none">
+                <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4">
                   <p className="text-[11px] font-bold text-slate-500 uppercase">Volume brut Votes</p>
-                  <p className="mt-1 font-display text-2xl font-extrabold text-[#1B2A4A]">
+                  <p className="mt-1 font-display text-lg font-extrabold text-[#1B2A4A] sm:text-2xl">
                     {formatXof(kpis.totalVotesGrossXof)}
                   </p>
                 </div>
-                <div className="w-[70vw] max-w-[250px] shrink-0 snap-start rounded-2xl border border-indigo-200 bg-indigo-50/70 p-4 sm:w-auto sm:max-w-none">
+                <div className="rounded-2xl border border-indigo-200 bg-indigo-50/70 p-3.5 sm:p-4">
                   <p className="text-[11px] font-bold text-indigo-800 uppercase">
-                    Commissions Javeroo 8 % (Votes)
+                    Commissions 8 % (Votes)
                   </p>
-                  <p className="mt-1 font-display text-2xl font-extrabold text-indigo-950">
+                  <p className="mt-1 font-display text-lg font-extrabold text-indigo-950 sm:text-2xl">
                     {formatXof(kpis.totalVotesCommissionXof)}
                   </p>
                 </div>
-                <div className="w-[70vw] max-w-[250px] shrink-0 snap-start rounded-2xl border border-teal-200 bg-teal-50/70 p-4 sm:w-auto sm:max-w-none">
+                <div className="rounded-2xl border border-teal-200 bg-teal-50/70 p-3.5 sm:p-4">
                   <p className="text-[11px] font-bold text-teal-800 uppercase">Votes live (session)</p>
                   <p className="mt-1 font-display text-2xl font-extrabold text-teal-950">
                     {voteTransactions.length} tx

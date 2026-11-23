@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Filter, RotateCcw, Search } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
+import { MobileCarousel } from "@/components/MobileCarousel";
 import { EVENT_CATEGORIES } from "@/config/site";
 import { UEMOA_COUNTRIES } from "@/config/uemoa";
 import { hydrateCustomEventsIntoStore } from "@/modules/events/custom-event-cookie";
@@ -311,22 +312,14 @@ export default async function EvenementsPage({ searchParams }: CatalogPageProps)
         </div>
       ) : (
         <div className="mt-5 sm:mt-8">
-          <div className="mb-2 flex items-center justify-between text-xs sm:hidden">
-            <span className="font-bold text-[#1B2A4A]">
-              Page {catalog.page}/{catalog.totalPages}
-            </span>
-            <span className="font-semibold text-teal-700">Glissez horizontalement →</span>
-          </div>
-          <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
+          <MobileCarousel
+            ariaLabel="Catalogue des événements"
+            gridClassName="sm:grid sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
+          >
             {catalog.items.map((event) => (
-              <div
-                key={event.id}
-                className="w-[84vw] max-w-[340px] shrink-0 snap-start sm:w-auto sm:max-w-none"
-              >
-                <EventCard event={event} />
-              </div>
+              <EventCard key={event.id} event={event} />
             ))}
-          </div>
+          </MobileCarousel>
         </div>
       )}
 

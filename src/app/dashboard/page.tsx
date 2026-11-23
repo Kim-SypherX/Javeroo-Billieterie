@@ -95,44 +95,41 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* KPIs strictement scopés à cet organisateur — rail horizontal sur mobile */}
-      <div className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-8 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
-        <div className="w-[70vw] max-w-[260px] shrink-0 snap-start rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:w-auto sm:max-w-none sm:p-5">
-          <p className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase">
-            <Ticket className="h-4 w-4 text-teal-600" aria-hidden="true" />
-            Vos billets vendus
+      {/* KPIs strictement scopés à cet organisateur — grille exacte 2x2 sur mobile (zéro découpe) */}
+      <div className="mt-6 grid grid-cols-2 gap-2.5 sm:mt-8 sm:gap-4 lg:grid-cols-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs sm:p-5">
+          <p className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase sm:text-xs">
+            <Ticket className="h-3.5 w-3.5 text-teal-600 sm:h-4 sm:w-4" aria-hidden="true" />
+            Billets &amp; Voix
           </p>
-          <p className="mt-2 font-display text-2xl font-bold text-[#1B2A4A]">
+          <p className="mt-1.5 font-display text-xl font-bold text-[#1B2A4A] sm:mt-2 sm:text-2xl">
             {totalTicketsSold.toLocaleString("fr-FR")}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
-            Sur {myEvents.length} événement{myEvents.length > 1 ? "s" : ""} ·{" "}
-            <strong>{totalVotesCount.toLocaleString("fr-FR")} voix</strong> ({myVoteCampaigns.length}{" "}
-            concours)
+          <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">
+            {myEvents.length} év. · <strong>{totalVotesCount.toLocaleString("fr-FR")} voix</strong>
           </p>
         </div>
 
-        <div className="w-[70vw] max-w-[260px] shrink-0 snap-start rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:w-auto sm:max-w-none sm:p-5">
-          <p className="text-xs font-bold text-slate-500 uppercase">Vos recettes brutes</p>
-          <p className="mt-2 font-display text-2xl font-bold text-[#1B2A4A]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs sm:p-5">
+          <p className="text-[11px] font-bold text-slate-500 uppercase sm:text-xs">Recettes brutes</p>
+          <p className="mt-1.5 font-display text-lg font-bold text-[#1B2A4A] sm:mt-2 sm:text-2xl">
             {formatXof(Math.max(wallet.summary.grossSalesXof, totalVotesGrossXof))}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
-            Dont {formatXof(totalVotesGrossXof)} en votes · Comm.{" "}
-            {PRICING_CONFIG.standardCommissionPercent} % :{" "}
+          <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">
+            Comm. {PRICING_CONFIG.standardCommissionPercent} % :{" "}
             {formatXof(wallet.summary.totalCommissionsXof)}
           </p>
         </div>
 
-        <div className="w-[70vw] max-w-[260px] shrink-0 snap-start rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:w-auto sm:max-w-none sm:p-5">
-          <p className="text-xs font-bold text-slate-500 uppercase">Vos retraits engagés</p>
-          <p className="mt-2 font-display text-2xl font-bold text-slate-700">
+        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs sm:p-5">
+          <p className="text-[11px] font-bold text-slate-500 uppercase sm:text-xs">Retraits engagés</p>
+          <p className="mt-1.5 font-display text-lg font-bold text-slate-700 sm:mt-2 sm:text-2xl">
             {formatXof(wallet.summary.withdrawnOrHeldXof)}
           </p>
-          <p className="mt-1 text-xs text-slate-500">{wallet.payouts.length} demande(s)</p>
+          <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">{wallet.payouts.length} demande(s)</p>
         </div>
 
-        <div className="w-[70vw] max-w-[260px] shrink-0 snap-start rounded-2xl border border-teal-200 bg-teal-50 p-4 shadow-xs sm:w-auto sm:max-w-none sm:p-5">
+        <div className="rounded-2xl border border-teal-200 bg-teal-50 p-3.5 shadow-xs sm:p-5">
           <p className="flex items-center gap-2 text-xs font-bold text-teal-800 uppercase">
             <Wallet className="h-4 w-4" aria-hidden="true" />
             Net disponible au retrait
