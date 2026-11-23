@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentSession } from "@/modules/auth/session";
 import { getEventById } from "@/modules/events/store";
-import { createScanSession, revokeScanSession } from "@/modules/operations/store";
+import { createScanSession, listScanSessions, revokeScanSession } from "@/modules/operations/store";
 
 const createSchema = z.object({
   eventId: z.string().min(1),
@@ -33,6 +33,12 @@ export async function POST(request: Request) {
     if (!event) {
       return NextResponse.json({ ok: false, error: "Événement introuvable." }, { status: 404 });
     }
+    if (session.role !== "PLATFORM_ADMIN" && event.organizerId !== session.organizationId) {
+      return NextResponse.json(
+        { ok: false, error: "Vous ne pouvez créer des codes porte que pour vos propres événements." },
+        { status: 403 },
+      );
+    }
 
     const scanSession = createScanSession({
       eventId: event.id,
@@ -60,14 +66,25 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ ok: false, error: "ID de session requis." }, { status: 400 });
     }
 
-    const ok = revokeScanSession(parsed.data.sessionId, session.fullName);
-    if (!ok) {
+    const target = listScanSessions().find((s) => s.id === parsed.data.sessionId);
+    if (!target) {
       return NextResponse.json({ ok: false, error: "Session introuvable." }, { status: 404 });
     }
+    const event = getEventById(target.eventId);
+    if (
+      session.role !== "PLATFORM_ADMIN" &&
+      event &&
+      event.organizerId !== session.organizationId
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "Vous ne pouvez pas révoquer l'accès porte d'un autre organisateur." },
+        { status: 403 },
+      );
+    }
 
+    revokeScanSession(parsed.data.sessionId, session.fullName);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ ok: false, error: "Impossible de révoquer la session." }, { status: 500 });
   }
 }
-

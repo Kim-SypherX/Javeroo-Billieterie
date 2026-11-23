@@ -73,9 +73,7 @@ export function DashboardWorkspace({
     Math.min(100_000, Math.max(5_000, walletSummary.availableForPayoutXof)),
   );
   const [payoutMethod, setPayoutMethod] = useState<"MOBILE_MONEY" | "BANK">("MOBILE_MONEY");
-  const [payoutDest, setPayoutDest] = useState(
-    latestKyc?.payoutDestination ?? "Orange Money · +226 70 11 22 33",
-  );
+  const [payoutDest, setPayoutDest] = useState(latestKyc?.payoutDestination ?? "");
   const [payoutMsg, setPayoutMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [payoutLoading, setPayoutLoading] = useState(false);
 
@@ -227,46 +225,54 @@ export function DashboardWorkspace({
           <div className="lg:col-span-5">
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
               <h2 className="font-display text-lg font-bold text-[#1B2A4A]">
-                Événements en ligne ({events.length})
+                Vos événements en ligne ({events.length})
               </h2>
-              <ul className="mt-4 divide-y divide-slate-100">
-                {events.map((evt) => {
-                  const avail = getEventAvailability(evt);
-                  return (
-                    <li key={evt.id} className="flex items-center justify-between gap-3 py-3">
-                      <div className="min-w-0">
-                        <Link
-                          href={`/evenements/${evt.slug}`}
-                          className="block truncate text-sm font-bold text-[#1B2A4A] hover:text-teal-700"
-                        >
-                          {evt.title}
-                        </Link>
-                        <p className="text-xs text-slate-500">
-                          {formatEventDate(evt.startsAt, evt.timezone)} · {avail.soldQty}/
-                          {avail.totalQty} vendus
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <a
-                          href={`/api/dashboard/events/${evt.id}/export`}
-                          title="Télécharger la liste CSV"
-                          aria-label={`Exporter les participants de ${evt.title} en CSV`}
-                          className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-teal-50 hover:text-teal-700"
-                        >
-                          <Download className="h-4 w-4" aria-hidden="true" />
-                        </a>
-                        <Link
-                          href={`/evenements/${evt.slug}`}
-                          aria-label={`Ouvrir ${evt.title}`}
-                          className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 hover:text-[#1B2A4A]"
-                        >
-                          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-                        </Link>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+              {events.length === 0 ? (
+                <p className="mt-3 rounded-2xl bg-slate-50 p-4 text-xs leading-relaxed text-slate-600">
+                  Vous n&apos;avez pas encore publié d&apos;événement. Remplissez le formulaire à
+                  gauche pour mettre en ligne votre premier événement avec ses catégories de billets
+                  (Pass Normal, VIP, Or...).
+                </p>
+              ) : (
+                <ul className="mt-4 divide-y divide-slate-100">
+                  {events.map((evt) => {
+                    const avail = getEventAvailability(evt);
+                    return (
+                      <li key={evt.id} className="flex items-center justify-between gap-3 py-3">
+                        <div className="min-w-0">
+                          <Link
+                            href={`/evenements/${evt.slug}`}
+                            className="block truncate text-sm font-bold text-[#1B2A4A] hover:text-teal-700"
+                          >
+                            {evt.title}
+                          </Link>
+                          <p className="text-xs text-slate-500">
+                            {formatEventDate(evt.startsAt, evt.timezone)} · {evt.tiers.length}{" "}
+                            tarif(s) · {avail.soldQty}/{avail.totalQty} vendus
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          <a
+                            href={`/api/dashboard/events/${evt.id}/export`}
+                            title="Télécharger la liste CSV"
+                            aria-label={`Exporter les participants de ${evt.title} en CSV`}
+                            className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-teal-50 hover:text-teal-700"
+                          >
+                            <Download className="h-4 w-4" aria-hidden="true" />
+                          </a>
+                          <Link
+                            href={`/evenements/${evt.slug}`}
+                            aria-label={`Ouvrir ${evt.title}`}
+                            className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 hover:text-[#1B2A4A]"
+                          >
+                            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                          </Link>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </div>
         </div>
@@ -291,49 +297,55 @@ export function DashboardWorkspace({
               </p>
             )}
 
-            <form onSubmit={handleIssueVip} className="mt-4 space-y-4">
-              <div>
-                <label htmlFor="vip-event" className="block text-sm font-semibold text-slate-800">
-                  Événement
-                </label>
-                <select
-                  id="vip-event"
-                  value={vipEventId}
-                  onChange={(e) => setVipEventId(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm"
+            {events.length === 0 ? (
+              <p className="mt-4 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600">
+                Publiez d&apos;abord un événement pour pouvoir générer des invitations VIP gratuites.
+              </p>
+            ) : (
+              <form onSubmit={handleIssueVip} className="mt-4 space-y-4">
+                <div>
+                  <label htmlFor="vip-event" className="block text-sm font-semibold text-slate-800">
+                    Votre événement
+                  </label>
+                  <select
+                    id="vip-event"
+                    value={vipEventId}
+                    onChange={(e) => setVipEventId(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm"
+                  >
+                    {events.map((ev) => (
+                      <option key={ev.id} value={ev.id}>
+                        {ev.title} ({ev.city})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="vip-guest" className="block text-sm font-semibold text-slate-800">
+                    Nom complet de l&apos;invité *
+                  </label>
+                  <input
+                    id="vip-guest"
+                    type="text"
+                    required
+                    value={vipGuestName}
+                    onChange={(e) => setVipGuestName(e.target.value)}
+                    placeholder="Ex. Salif Koné (Presse)"
+                    className="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={vipLoading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#1B2A4A] px-5 py-2.5 text-sm font-bold text-white hover:bg-teal-600 disabled:opacity-50"
                 >
-                  {events.map((ev) => (
-                    <option key={ev.id} value={ev.id}>
-                      {ev.title} ({ev.city})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="vip-guest" className="block text-sm font-semibold text-slate-800">
-                  Nom complet de l&apos;invité *
-                </label>
-                <input
-                  id="vip-guest"
-                  type="text"
-                  required
-                  value={vipGuestName}
-                  onChange={(e) => setVipGuestName(e.target.value)}
-                  placeholder="Ex. Salif Koné (Presse)"
-                  className="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={vipLoading}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#1B2A4A] px-5 py-2.5 text-sm font-bold text-white hover:bg-teal-600 disabled:opacity-50"
-              >
-                {vipLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-                Générer l&apos;invitation QR
-              </button>
-            </form>
+                  {vipLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                  Générer l&apos;invitation QR
+                </button>
+              </form>
+            )}
 
             {vipTicket && (
               <div className="mt-5 flex items-center gap-4 rounded-2xl border border-teal-200 bg-teal-50 p-4">
@@ -372,28 +384,34 @@ export function DashboardWorkspace({
               Téléchargez la liste à jour des billets émis (ventes + invitations VIP), incluant
               l&apos;heure exacte de scan et la porte de passage.
             </p>
-            <ul className="mt-4 space-y-2.5">
-              {events.map((ev) => (
-                <li
-                  key={ev.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-[#1B2A4A]">{ev.title}</p>
-                    <p className="text-xs text-slate-500">
-                      {ev.city} · {formatEventDate(ev.startsAt, ev.timezone)}
-                    </p>
-                  </div>
-                  <a
-                    href={`/api/dashboard/events/${ev.id}/export`}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-bold text-[#1B2A4A] shadow-2xs ring-1 ring-slate-200 hover:bg-teal-50 hover:text-teal-700"
+            {events.length === 0 ? (
+              <p className="mt-4 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600">
+                Aucun événement à exporter pour le moment.
+              </p>
+            ) : (
+              <ul className="mt-4 space-y-2.5">
+                {events.map((ev) => (
+                  <li
+                    key={ev.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5"
                   >
-                    <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                    Export CSV
-                  </a>
-                </li>
-              ))}
-            </ul>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-[#1B2A4A]">{ev.title}</p>
+                      <p className="text-xs text-slate-500">
+                        {ev.city} · {formatEventDate(ev.startsAt, ev.timezone)}
+                      </p>
+                    </div>
+                    <a
+                      href={`/api/dashboard/events/${ev.id}/export`}
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-bold text-[#1B2A4A] shadow-2xs ring-1 ring-slate-200 hover:bg-teal-50 hover:text-teal-700"
+                    >
+                      <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                      Export CSV
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       )}
@@ -410,47 +428,56 @@ export function DashboardWorkspace({
               Créer un accès agent de porte
             </h2>
             <p className="text-xs text-slate-600">
-              Chaque code donne accès uniquement au contrôle des billets de l&apos;événement choisi
-              — zéro accès aux recettes ni aux réglages.
+              Chaque code donne accès uniquement au contrôle des billets de votre événement choisi —
+              zéro accès aux recettes ni aux réglages.
             </p>
-            <div>
-              <label htmlFor="gate-event" className="block text-sm font-semibold text-slate-800">
-                Événement
-              </label>
-              <select
-                id="gate-event"
-                value={gateEventId}
-                onChange={(e) => setGateEventId(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm"
-              >
-                {events.map((ev) => (
-                  <option key={ev.id} value={ev.id}>
-                    {ev.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="gate-name" className="block text-sm font-semibold text-slate-800">
-                Nom de la porte *
-              </label>
-              <input
-                id="gate-name"
-                type="text"
-                required
-                value={gateLabel}
-                onChange={(e) => setGateLabel(e.target.value)}
-                placeholder="Ex. Entrée VIP Est"
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={gateLoading}
-              className="rounded-xl bg-[#1B2A4A] px-5 py-2.5 text-sm font-bold text-white hover:bg-teal-600 disabled:opacity-50"
-            >
-              Générer un code porte
-            </button>
+            {events.length === 0 ? (
+              <p className="rounded-2xl bg-slate-50 p-4 text-xs text-slate-600">
+                Publiez d&apos;abord votre premier événement pour créer des codes d&apos;accès porte
+                pour vos agents d&apos;accueil.
+              </p>
+            ) : (
+              <>
+                <div>
+                  <label htmlFor="gate-event" className="block text-sm font-semibold text-slate-800">
+                    Votre événement
+                  </label>
+                  <select
+                    id="gate-event"
+                    value={gateEventId}
+                    onChange={(e) => setGateEventId(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm"
+                  >
+                    {events.map((ev) => (
+                      <option key={ev.id} value={ev.id}>
+                        {ev.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="gate-name" className="block text-sm font-semibold text-slate-800">
+                    Nom de la porte *
+                  </label>
+                  <input
+                    id="gate-name"
+                    type="text"
+                    required
+                    value={gateLabel}
+                    onChange={(e) => setGateLabel(e.target.value)}
+                    placeholder="Ex. Entrée VIP Est"
+                    className="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={gateLoading}
+                  className="rounded-xl bg-[#1B2A4A] px-5 py-2.5 text-sm font-bold text-white hover:bg-teal-600 disabled:opacity-50"
+                >
+                  Générer un code porte
+                </button>
+              </>
+            )}
           </form>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs lg:col-span-7">

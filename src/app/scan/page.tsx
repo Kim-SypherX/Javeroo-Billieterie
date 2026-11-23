@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ScanConsole } from "@/components/ScanConsole";
-import { listAllEvents } from "@/modules/events/store";
+import { getCurrentSession } from "@/modules/auth/session";
+import { getEventById, listAllEvents, listEventsForOrganization } from "@/modules/events/store";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,22 @@ export default async function ScanPage({ searchParams }: ScanPageProps) {
   const code = typeof params.code === "string" ? params.code : undefined;
   const accessCode = typeof params.accessCode === "string" ? params.accessCode : undefined;
 
-  const events = listAllEvents().map((e) => ({
+  const session = await getCurrentSession();
+
+  // Isolation : un organisateur connecté ne voit que ses propres événements sur /scan
+  // (plus éventuellement l'événement ciblé s'il clique sur "Tester sur l'outil Scan" depuis un reçu de billet).
+  let sourceEvents = listAllEvents();
+  if (session && session.role === "ORGANIZER" && session.organizationId) {
+    const ownEvents = listEventsForOrganization(session.organizationId);
+    if (eventId && !ownEvents.some((e) => e.id === eventId)) {
+      const target = getEventById(eventId);
+      sourceEvents = target ? [target, ...ownEvents] : ownEvents;
+    } else {
+      sourceEvents = ownEvents;
+    }
+  }
+
+  const events = sourceEvents.map((e) => ({
     id: e.id,
     title: e.title,
     city: e.city,

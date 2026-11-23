@@ -17,6 +17,12 @@ export async function GET(
   if (!event) {
     return NextResponse.json({ error: "Événement introuvable." }, { status: 404 });
   }
+  if (session.role !== "PLATFORM_ADMIN" && event.organizerId !== session.organizationId) {
+    return NextResponse.json(
+      { error: "Accès refusé : cet événement appartient à un autre organisateur." },
+      { status: 403 },
+    );
+  }
 
   const tickets = listTicketsForEvent(event.id);
   const csv = buildEventParticipantsCsv(tickets);

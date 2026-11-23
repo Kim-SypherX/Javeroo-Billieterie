@@ -234,8 +234,9 @@ export default function HomePage() {
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-slate-300 sm:text-base">
               Encaissez par Orange Money, Wave, Moov Money, MTN MoMo, Mixx/T-Money et carte bancaire.
-              Vous choisissez librement qui supporte la commission de{" "}
-              {PRICING_CONFIG.standardCommissionPercent}&nbsp;% — zéro frais sur les billets gratuits.
+              Vos spectateurs paient exactement le prix affiché : la commission de{" "}
+              {PRICING_CONFIG.standardCommissionPercent}&nbsp;% est prélevée directement sur vos
+              ventes payantes (zéro frais sur les billets gratuits).
             </p>
             <ul className="mt-5 grid gap-2.5 text-sm text-slate-200 sm:grid-cols-2">
               {[

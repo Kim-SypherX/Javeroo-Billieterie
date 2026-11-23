@@ -394,10 +394,10 @@ export function CheckoutModal({ event, initialTierId, open, onClose }: CheckoutM
                   </div>
                 )}
                 <div className="mt-1.5 flex justify-between text-slate-600">
-                  <span>Frais de service</span>
-                  <span className="font-medium text-slate-900">
+                  <span>Frais de service acheteur</span>
+                  <span className="font-medium text-teal-700">
                     {pricing.buyerFeeXof === 0
-                      ? "0 FCFA (offerts par l'organisateur)"
+                      ? "0 FCFA (aucun frais ajouté)"
                       : formatXof(pricing.buyerFeeXof)}
                   </span>
                 </div>
@@ -544,9 +544,10 @@ export function CheckoutModal({ event, initialTierId, open, onClose }: CheckoutM
                       Environnement de démonstration V1 (Sandbox)
                     </p>
                     <p className="mt-1 leading-relaxed">
-                      En cliquant sur « Confirmer et obtenir mes billets », le paiement{" "}
+                      En cliquant sur « Payer {formatXof(pricing.totalToPayXof)} », le paiement{" "}
                       <strong>{PAYMENT_METHODS[paymentMethod].name}</strong> est simulé sans débit
-                      réel et vos vrais QR codes cryptographiques sont émis immédiatement.
+                      réel et vos vrais billets QR code cryptographiques sont émis immédiatement
+                      (téléchargement PDF et vérification au portail <code>/scan</code> inclus).
                     </p>
                   </div>
                 </>

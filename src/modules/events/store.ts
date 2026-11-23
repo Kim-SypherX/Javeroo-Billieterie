@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import QRCode from "qrcode";
-import { PRICING_CONFIG, type FeeBearer } from "@/config/pricing";
+import { PRICING_CONFIG } from "@/config/pricing";
 import type { EventCategoryId } from "@/config/site";
 import {
   getCountryByCode,
@@ -514,10 +514,38 @@ export function validateAndCheckinTicket(params: {
       };
     }
     ticket = verification.claims ? state.ticketsById.get(verification.claims.ticketId) : undefined;
+    if (!ticket && verification.claims) {
+      // Vérification cryptographique stateless réussie (ex. billet émis sur une autre instance serverless Vercel)
+      const matchedEvent = state.events.find((e) => e.id === verification.claims?.eventId);
+      const syntheticTicket: IssuedTicketView = {
+        id: verification.claims.ticketId,
+        shortCode: `QR-${verification.claims.ticketId.slice(-6).toUpperCase()}`,
+        qrPayload: input,
+        eventId: verification.claims.eventId,
+        eventTitle: matchedEvent?.title ?? "Événement vérifié",
+        eventSlug: matchedEvent?.slug ?? "",
+        eventStartsAt: matchedEvent?.startsAt ?? new Date().toISOString(),
+        eventCity: matchedEvent?.city ?? "",
+        eventVenue: matchedEvent?.venueName ?? "",
+        tierId: verification.claims.tierCode,
+        tierName: verification.claims.tierCode,
+        unitPriceXof: 0,
+        attendeeName: "Titulaire vérifié (QR signé)",
+        status: "USED",
+        checkedInAt: new Date().toISOString(),
+        checkedInGate: params.gateLabel || "Entrée Principale",
+      };
+      state.ticketsById.set(syntheticTicket.id, syntheticTicket);
+      return {
+        status: "VALID",
+        message: "Signature cryptographique authentique — Entrée validée !",
+        ticket: syntheticTicket,
+      };
+    }
     if (!ticket) {
       return {
         status: "INVALID",
-        message: "Signature valide mais billet introuvable dans le registre de cet événement.",
+        message: "Billet introuvable dans le registre de cet événement.",
       };
     }
   } else {
@@ -570,13 +598,19 @@ export function createEventFromDashboard(input: {
   city: string;
   venueName: string;
   venueAddress: string;
+  locationHint?: string;
+  latitude?: number;
+  longitude?: number;
+  mapsUrl?: string;
+  coverImageUrl?: string;
   startsAt: string;
   endsAt: string;
-  feeBearer: FeeBearer;
-  coverImageUrl?: string;
-  tierName: string;
-  tierPriceXof: number;
-  tierTotalQty: number;
+  tiers: ReadonlyArray<{
+    name: string;
+    description?: string;
+    priceXof: number;
+    totalQty: number;
+  }>;
   promoCode?: string;
   promoPercent?: number;
 }): EventView {
@@ -610,6 +644,17 @@ export function createEventFromDashboard(input: {
         ]
       : [];
 
+  const normalizedTiers = input.tiers.map((t) => ({
+    id: `tier-${crypto.randomBytes(4).toString("hex")}`,
+    name: t.name.trim() || "Pass Normal",
+    description: t.description?.trim() || "Billet avec QR code sécurisé à usage unique.",
+    priceXof: Math.max(0, Math.round(t.priceXof)),
+    totalQty: Math.max(1, Math.round(t.totalQty)),
+    soldQty: 0,
+    reservedQty: 0,
+    maxPerOrder: 10,
+  }));
+
   const newEvent: EventView = {
     id,
     slug,
@@ -617,31 +662,24 @@ export function createEventFromDashboard(input: {
     shortSummary: input.shortSummary.trim(),
     description: input.description.trim(),
     category: input.category,
-    isFeatured: true,
+    isFeatured: false,
     countryCode: input.countryCode,
     city: input.city.trim(),
     venueName: input.venueName.trim(),
     venueAddress: input.venueAddress.trim(),
+    locationHint: input.locationHint?.trim() || undefined,
+    latitude: input.latitude,
+    longitude: input.longitude,
+    mapsUrl: input.mapsUrl?.trim() || undefined,
     startsAt: new Date(input.startsAt).toISOString(),
     endsAt: new Date(input.endsAt).toISOString(),
     timezone: country.timezone,
-    feeBearer: input.feeBearer,
+    feeBearer: "ORGANIZER",
     commissionBps: PRICING_CONFIG.standardCommissionBps,
     coverImageUrl: input.coverImageUrl,
     organizerId: organizer.id,
     organizer,
-    tiers: [
-      {
-        id: `tier-${crypto.randomBytes(4).toString("hex")}`,
-        name: input.tierName.trim() || "Pass Normal",
-        description: "Billet standard avec QR code sécurisé.",
-        priceXof: Math.max(0, Math.round(input.tierPriceXof)),
-        totalQty: Math.max(1, Math.round(input.tierTotalQty)),
-        soldQty: 0,
-        reservedQty: 0,
-        maxPerOrder: 10,
-      },
-    ],
+    tiers: normalizedTiers,
     promoCodes,
     posterTheme: {
       from: "#1B2A4A",

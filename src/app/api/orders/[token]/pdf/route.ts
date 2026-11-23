@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOrderByToken } from "@/modules/events/store";
+import { readSignedOrdersFromCookie } from "@/modules/orders/receipt-cookie";
 import { generateTicketsPdfBuffer } from "@/modules/tickets/pdf";
 
 export async function GET(
@@ -7,7 +8,16 @@ export async function GET(
   context: { params: Promise<{ token: string }> },
 ) {
   const { token } = await context.params;
-  const order = await getOrderByToken(token);
+  let order = await getOrderByToken(token);
+
+  if (!order) {
+    const cookieOrders = await readSignedOrdersFromCookie();
+    const matched = cookieOrders.find((o) => o.publicToken === token);
+    if (matched) {
+      order = { ...matched, tickets: matched.tickets };
+    }
+  }
+
   if (!order || order.tickets.length === 0) {
     return NextResponse.json({ error: "Commande introuvable." }, { status: 404 });
   }
@@ -24,4 +34,3 @@ export async function GET(
     },
   });
 }
-

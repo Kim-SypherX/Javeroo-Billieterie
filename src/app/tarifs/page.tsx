@@ -80,7 +80,7 @@ export default function TarifsPage() {
             {PRICING_CONFIG.standardCommissionPercent}&nbsp;%
           </p>
           <p className="mt-1 text-sm text-slate-600">
-            Tout inclus · Choix frais organisateur ou acheteur
+            Tout inclus · Déduite des recettes organisateur (0 FCFA ajouté au spectateur)
           </p>
           <ul className="mt-6 space-y-2.5 text-sm text-slate-700">
             {[

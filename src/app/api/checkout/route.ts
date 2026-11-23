@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createCheckoutOrder } from "@/modules/events/store";
+import { buildUpdatedReceiptCookie } from "@/modules/orders/receipt-cookie";
 
 const checkoutSchema = z.object({
   eventId: z.string().min(1),
@@ -58,11 +59,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: result.error }, { status: 409 });
     }
 
-    return NextResponse.json({
+    const receiptCookie = await buildUpdatedReceiptCookie(result.order);
+    const response = NextResponse.json({
       ok: true,
       orderToken: result.order.publicToken,
       order: result.order,
     });
+    response.cookies.set(receiptCookie);
+    return response;
   } catch {
     return NextResponse.json(
       { ok: false, error: "Erreur lors de la création de la commande." },
@@ -70,4 +74,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

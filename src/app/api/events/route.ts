@@ -3,10 +3,43 @@ import { z } from "zod";
 import { getCurrentSession } from "@/modules/auth/session";
 import { createEventFromDashboard, searchEvents } from "@/modules/events/store";
 
+const tierSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Chaque catégorie de billet doit avoir un nom (ex. Pass Normal, Pass VIP).")
+    .max(120),
+  description: z.string().trim().max(240).optional(),
+  priceXof: z.number().int().min(0, "Le prix doit être positif ou nul.").max(5_000_000),
+  totalQty: z.number().int().min(1, "Indiquez au moins 1 place.").max(100_000),
+});
+
+const safeCoverImageSchema = z
+  .string()
+  .trim()
+  .max(700_000, "L'affiche est trop lourde (réduisez sa taille ou activez Vercel Blob).")
+  .refine(
+    (val) =>
+      val === "" ||
+      val.startsWith("/uploads/") ||
+      val.startsWith("https://") ||
+      /^data:image\/(jpeg|png|webp|avif);base64,[A-Za-z0-9+/=]+$/.test(val),
+    "Format d'URL d'affiche non autorisé.",
+  )
+  .optional();
+
 const createEventSchema = z.object({
   title: z.string().trim().min(4, "Le titre doit contenir au moins 4 caractères.").max(180),
-  shortSummary: z.string().trim().min(10, "Ajoutez un résumé court (10 car. min).").max(280),
-  description: z.string().trim().min(15, "Décrivez l'événement (15 car. min)."),
+  shortSummary: z
+    .string()
+    .trim()
+    .min(10, "La phrase d'accroche doit contenir au moins 10 caractères.")
+    .max(280),
+  description: z
+    .string()
+    .trim()
+    .min(15, "La description détaillée doit contenir au moins 15 caractères.")
+    .max(5000),
   category: z.enum([
     "concert",
     "festival",
@@ -18,19 +51,46 @@ const createEventSchema = z.object({
     "soiree",
   ]),
   countryCode: z.enum(["BF", "CI", "SN", "BJ", "TG", "ML", "NE", "GW"]),
-  city: z.string().trim().min(2).max(100),
-  venueName: z.string().trim().min(2).max(160),
-  venueAddress: z.string().trim().min(4).max(240),
-  startsAt: z.string().min(8),
-  endsAt: z.string().min(8),
-  feeBearer: z.enum(["ORGANIZER", "BUYER"]),
-  coverImageUrl: z.string().trim().max(300).optional(),
-  tierName: z.string().trim().min(2).max(120),
-  tierPriceXof: z.number().int().min(0).max(5_000_000),
-  tierTotalQty: z.number().int().min(1).max(100_000),
+  city: z.string().trim().min(2, "Indiquez la ville.").max(100),
+  venueName: z.string().trim().min(2, "Indiquez le nom de la salle ou du lieu.").max(160),
+  venueAddress: z.string().trim().min(4, "Indiquez le quartier ou l'adresse.").max(240),
+  locationHint: z.string().trim().max(240).optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  mapsUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .refine(
+      (v) => v === "" || v.startsWith("https://") || v.startsWith("http://"),
+      "Le lien Google Maps doit commencer par https://.",
+    )
+    .optional(),
+  startsAt: z.string().min(8, "Indiquez la date et l'heure de début."),
+  endsAt: z.string().min(8, "Indiquez la date et l'heure de fin."),
+  coverImageUrl: safeCoverImageSchema,
+  tiers: z
+    .array(tierSchema)
+    .min(1, "Ajoutez au moins une catégorie de billet.")
+    .max(10, "Maximum 10 catégories de billets par événement."),
   promoCode: z.string().trim().max(40).optional(),
   promoPercent: z.number().int().min(0).max(90).optional(),
 });
+
+const FIELD_LABELS: Record<string, string> = {
+  title: "Titre",
+  shortSummary: "Phrase d'accroche",
+  description: "Description détaillée",
+  city: "Ville",
+  venueName: "Nom du lieu",
+  venueAddress: "Adresse / quartier",
+  locationHint: "Repères pour trouver le lieu",
+  mapsUrl: "Lien Google Maps",
+  coverImageUrl: "Affiche officielle",
+  tiers: "Catégories de billets",
+  startsAt: "Date de début",
+  endsAt: "Date de fin",
+};
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -51,7 +111,10 @@ export async function POST(request: Request) {
   const session = await getCurrentSession();
   if (!session || (session.role !== "ORGANIZER" && session.role !== "PLATFORM_ADMIN")) {
     return NextResponse.json(
-      { ok: false, error: "Veuillez vous connecter en tant qu'organisateur pour publier un événement." },
+      {
+        ok: false,
+        error: "Veuillez vous connecter en tant qu'organisateur pour publier un événement.",
+      },
       { status: 401 },
     );
   }
@@ -60,14 +123,19 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = createEventSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        { ok: false, error: parsed.error.issues[0]?.message ?? "Formulaire incomplet." },
-        { status: 400 },
-      );
+      const issue = parsed.error.issues[0];
+      const fieldKey = String(issue?.path[0] ?? "");
+      const label = FIELD_LABELS[fieldKey];
+      const message = label
+        ? `${label} : ${issue?.message ?? "valeur invalide."}`
+        : (issue?.message ?? "Formulaire incomplet.");
+      return NextResponse.json({ ok: false, error: message }, { status: 400 });
     }
 
     const created = createEventFromDashboard({
       ...parsed.data,
+      coverImageUrl: parsed.data.coverImageUrl || undefined,
+      mapsUrl: parsed.data.mapsUrl || undefined,
       organizationId: session.organizationId,
     });
     return NextResponse.json({ ok: true, event: created }, { status: 201 });
@@ -78,4 +146,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

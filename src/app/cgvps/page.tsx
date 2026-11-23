@@ -40,9 +40,9 @@ export default function CgvpsPage() {
             <li>Événements gratuits : <strong>0 % de commission</strong>.</li>
             <li>
               Billets payants (standard) :{" "}
-              <strong>{PRICING_CONFIG.standardCommissionPercent} % tout inclus</strong> (prise en
-              charge au choix de l&apos;organisateur ou refacturée de façon transparente à
-              l&apos;acheteur).
+              <strong>{PRICING_CONFIG.standardCommissionPercent} % tout inclus</strong>, prélevés
+              directement sur les recettes brutes de l&apos;organisateur avant reversement (aucun
+              frais supplémentaire ajouté au prix du billet payé par le spectateur).
             </li>
             <li>
               Grands comptes (&ge; {PRICING_CONFIG.enterpriseTicketThreshold.toLocaleString("fr-FR")}{" "}

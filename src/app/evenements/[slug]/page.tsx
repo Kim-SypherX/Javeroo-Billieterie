@@ -58,9 +58,13 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const category = EVENT_CATEGORY_MAP[event.category];
   const minPrice = getEventMinPriceXof(event);
   const shareUrl = `${SITE_CONFIG.baseUrl}/evenements/${event.slug}`;
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    `${event.venueName}, ${event.venueAddress}, ${event.city}, ${country.name}`,
-  )}`;
+  const mapsUrl =
+    event.mapsUrl ||
+    (event.latitude !== undefined && event.longitude !== undefined
+      ? `https://www.google.com/maps/search/?api=1&query=${event.latitude},${event.longitude}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${event.venueName}, ${event.venueAddress}, ${event.city}, ${country.name}`,
+        )}`);
 
   // Données structurées JSON-LD schema.org/Event pour rich snippets Google
   const jsonLd = {
@@ -159,16 +163,21 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               <div className="flex items-start gap-3">
                 <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-teal-600" aria-hidden="true" />
                 <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase">Lieu</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase">Lieu &amp; Accès</p>
                   <p className="mt-0.5 text-sm font-semibold text-[#1B2A4A]">{event.venueName}</p>
                   <p className="text-xs text-slate-600">{event.venueAddress}</p>
+                  {event.locationHint && (
+                    <p className="mt-1 rounded-lg bg-white px-2.5 py-1.5 text-xs text-slate-700 ring-1 ring-slate-200">
+                      <strong>Repère :</strong> {event.locationHint}
+                    </p>
+                  )}
                   <a
                     href={mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-teal-700 hover:underline"
+                    className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-teal-700 hover:underline"
                   >
-                    Ouvrir l&apos;itinéraire Google Maps
+                    Suivre l&apos;itinéraire GPS (Google Maps)
                     <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   </a>
                 </div>
@@ -256,9 +265,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 {country.paymentMethods.map((m) => PAYMENT_METHODS[m].shortName).join(" · ")}
               </p>
               <p className="mt-2 text-[11px] text-slate-500">
-                {event.feeBearer === "ORGANIZER"
-                  ? "Frais de service inclus dans le prix affiché — aucun surcoût ajouté au panier."
-                  : "Les frais de service (8 %) sont affichés en détail avant la validation du paiement."}
+                0 FCFA de frais cachés : vous payez exactement le prix affiché sur le billet.
               </p>
             </div>
           </div>

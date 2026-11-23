@@ -48,6 +48,10 @@ export interface EventView {
   city: string;
   venueName: string;
   venueAddress: string;
+  locationHint?: string;
+  latitude?: number;
+  longitude?: number;
+  mapsUrl?: string;
   startsAt: string;
   endsAt: string;
   timezone: string;

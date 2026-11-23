@@ -5,6 +5,12 @@ import { Calendar, CheckCircle2, Download, MapPin, QrCode } from "lucide-react";
 import { PrintTicketsButton } from "@/components/PrintTicketsButton";
 import { formatEventDate, formatEventTime, formatXof, PAYMENT_METHODS } from "@/config/uemoa";
 import { getOrderByToken } from "@/modules/events/store";
+import {
+  hydrateOrderWithQrImages,
+  readSignedOrdersFromCookie,
+} from "@/modules/orders/receipt-cookie";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Vos billets confirmés",
@@ -17,8 +23,22 @@ interface OrderPageProps {
 
 export default async function OrderConfirmationPage({ params }: OrderPageProps) {
   const { token } = await params;
-  const order = await getOrderByToken(token);
+  let order = await getOrderByToken(token);
+
+  if (!order) {
+    const cookieOrders = await readSignedOrdersFromCookie();
+    const matched = cookieOrders.find((o) => o.publicToken === token);
+    if (matched) {
+      order = await hydrateOrderWithQrImages(matched);
+    }
+  }
+
   if (!order) notFound();
+
+  const firstTicket = order.tickets[0];
+  const scanTestHref = firstTicket
+    ? `/scan?eventId=${encodeURIComponent(order.eventId)}&code=${encodeURIComponent(firstTicket.qrPayload)}`
+    : "/scan";
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
@@ -132,12 +152,12 @@ export default async function OrderConfirmationPage({ params }: OrderPageProps) 
         <div className="text-sm text-slate-700">
           <p className="font-bold text-[#1B2A4A]">Tester le contrôle d&apos;entrée dès maintenant</p>
           <p className="text-xs text-slate-600">
-            Copiez le code court <strong className="font-mono">{order.tickets[0]?.shortCode}</strong>{" "}
-            et testez le scan porte (1er passage = Vert, 2e passage = Rouge anti-fraude).
+            Le QR signé du billet <strong className="font-mono">{firstTicket?.shortCode}</strong> est
+            pré-rempli automatiquement (1er passage = Vert, 2e passage = Rouge anti-doublon).
           </p>
         </div>
         <Link
-          href={`/scan?eventId=${order.eventId}&code=${encodeURIComponent(order.tickets[0]?.shortCode ?? "")}`}
+          href={scanTestHref}
           className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-700"
         >
           <QrCode className="h-4 w-4" aria-hidden="true" />
@@ -147,4 +167,3 @@ export default async function OrderConfirmationPage({ params }: OrderPageProps) 
     </div>
   );
 }
-

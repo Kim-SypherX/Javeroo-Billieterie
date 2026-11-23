@@ -11,6 +11,11 @@ export const PRICING_CONFIG = {
   currencyLabel: "FCFA",
   monthlySubscriptionXof: 0,
   freeEventCommissionBps: 0,
+  /**
+   * Règle métier unique : la commission est toujours prélevée côté organisateur.
+   * Le spectateur paie exactement le prix affiché sur le billet (0 frais ajoutés).
+   */
+  defaultFeeBearer: "ORGANIZER" as const,
   /** 800 points de base = 8,00 % tout inclus sur les billets payants */
   standardCommissionBps: 800,
   standardCommissionPercent: 8,

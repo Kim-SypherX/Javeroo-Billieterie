@@ -30,6 +30,12 @@ export async function POST(request: Request) {
     if (!event) {
       return NextResponse.json({ ok: false, error: "Événement introuvable." }, { status: 404 });
     }
+    if (session.role !== "PLATFORM_ADMIN" && event.organizerId !== session.organizationId) {
+      return NextResponse.json(
+        { ok: false, error: "Vous ne pouvez émettre d'invitations que pour vos propres événements." },
+        { status: 403 },
+      );
+    }
     const tier = event.tiers.find((t) => t.id === parsed.data.tierId) ?? event.tiers[0];
     if (!tier) {
       return NextResponse.json({ ok: false, error: "Catégorie introuvable." }, { status: 404 });
